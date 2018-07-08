@@ -1,0 +1,20 @@
+{
+  "name": "@cfn-modules/asg-singleton-amazon-linux2",
+  "version": "0.0.1",
+  "description": "AWS Auto Scaling Group running a single EC2 instance based on Amazon Linux 2 with a fixed public IP address (Elastic IP), alerting, IAM user SSH access, following an immutable infrastructure approach (root volume can be replaced at any time)",
+  "author": "Michael Wittig <michael@widdix.de>",
+  "license": "Apache-2.0",
+  "keywords": [
+    "cfn-modules",
+    "cfn-modules:ExposeName",
+    "cfn-modules:ExposeSecurityGroupId"
+  ],
+  "homepage": "https://github.com/cfn-modules",
+  "bugs": {
+    "url": "https://github.com/cfn-modules/asg-singleton-amazon-linux2/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cfn-modules/asg-singleton-amazon-linux2.git"
+  }
+}
