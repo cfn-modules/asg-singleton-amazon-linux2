@@ -1,0 +1,27 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'cfn-modules test'
+Resources:
+  Vpc:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      Parameters:
+        S3Endpoint: 'false' # speed up the example
+        DynamoDBEndpoint: 'false' # speed up the example
+        FlowLog: 'false' # speed up the example
+        NatGateways: 'false' # speed up the example
+      TemplateURL: './node_modules/@cfn-modules/vpc/module.yml'
+  Asg:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      Parameters:
+        VpcModule: !GetAtt 'Vpc.Outputs.StackName'
+        UserData: |
+          yum install -y httpd
+          service httpd start
+          echo "cfn-modules" > /var/www/html/index.html
+        IngressTcpPort1: '80'
+      TemplateURL: './node_modules/@cfn-modules/asg-singleton-amazon-linux2/module.yml'
+Outputs:
+  PublicIpAddress:
+    Value: !GetAtt 'Asg.Outputs.PublicIpAddress'
