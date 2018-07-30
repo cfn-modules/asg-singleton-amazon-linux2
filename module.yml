@@ -298,19 +298,6 @@ Resources:
         - Effect: Allow
           Action: 'ec2:DescribeTags'
           Resource: '*'
-  PolicyAssociateAddress:
-    Type: 'AWS::IAM::Policy'
-    Condition: HasSubnetReachPublic
-    Properties:
-      Roles:
-      - !Ref Role
-      PolicyName: 'ec2'
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-        - Effect: Allow
-          Action: 'ec2:AssociateAddress'
-          Resource: '*'
   PolicyChangeResourceRecordSets:
     Type: 'AWS::IAM::Policy'
     Condition: HasHostedZoneModuleAndSubnetReachPrivate
@@ -509,8 +496,7 @@ Resources:
         - |
             #!/bin/bash -ex
             trap '/opt/aws/bin/cfn-signal -e 1 --region ${Region} --stack ${StackName} --resource AutoScalingGroup' ERR
-            ${UserDataAttachElasticIP}
-            ${UerDataUpdateRecordSet}
+            ${UserDataUpdateRecordSet}
             ${UserDataMountFileSystem1}
             mount -a
             /opt/aws/bin/cfn-init -v --region ${Region} --stack ${StackName} --resource LaunchConfiguration
@@ -518,15 +504,85 @@ Resources:
             /opt/aws/bin/cfn-signal -e 0 --region ${Region} --stack ${StackName} --resource AutoScalingGroup
         - Region: !Ref 'AWS::Region'
           StackName: !Ref 'AWS::StackName'
-          UserDataAttachElasticIP: !If [HasSubnetReachPublic, !Sub 'aws --region ${AWS::Region} ec2 associate-address --instance-id $(curl -s -m 60 http://169.254.169.254/latest/meta-data/instance-id) --allocation-id ${ElasticIP.AllocationId} && sleep 5', '']
-          UerDataUpdateRecordSet: !If [HasHostedZoneModuleAndSubnetReachPrivate, !Join ['', ['aws route53 change-resource-record-sets --hosted-zone-id ', {'Fn::ImportValue': !Sub '${HostedZoneModule}-Id'}, ' --change-batch "{\"Changes\": [{\"Action\": \"UPSERT\", \"ResourceRecordSet\": {\"Name\": \"', !Ref SubDomainNameWithDot, {'Fn::ImportValue': !Sub '${HostedZoneModule}-Name'}, '\", \"Type\": \"A\", \"TTL\": 60, \"ResourceRecords\": [{\"Value\": \"$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)\"}]}}]}"']], '']
+          UserDataUpdateRecordSet: !If [HasHostedZoneModuleAndSubnetReachPrivate, !Join ['', ['aws route53 change-resource-record-sets --hosted-zone-id ', {'Fn::ImportValue': !Sub '${HostedZoneModule}-Id'}, ' --change-batch "{\"Changes\": [{\"Action\": \"UPSERT\", \"ResourceRecordSet\": {\"Name\": \"', !Ref SubDomainNameWithDot, {'Fn::ImportValue': !Sub '${HostedZoneModule}-Name'}, '\", \"Type\": \"A\", \"TTL\": 60, \"ResourceRecords\": [{\"Value\": \"$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)\"}]}}]}"']], ''] # TODO should also be moved inside lifecyclehook
           UserDataMountFileSystem1: !If [HasFileSystemModule1, !Join ['', ['yum install -y amazon-efs-utils && mkdir -p /mnt/efs1 && echo "', {'Fn::ImportValue': !Sub '${FileSystemModule1}-Id'}, ':/ /mnt/efs1 efs defaults,_netdev 0 0" >> /etc/fstab']], '']
           UserData: !Ref UserData
+  QueueLifecycleHook:
+    Condition: HasSubnetReachPublic
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      Parameters:
+        AlertingModule: !Ref AlertingModule
+      TemplateURL: './node_modules/@cfn-modules/sqs-queue/module.yml'
+  QueueLifecycleHookEventSource:
+    Condition: HasSubnetReachPublic
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      Parameters:
+        LambdaModule: !GetAtt 'FunctionLifecycleHook.Outputs.StackName'
+        QueueModule: !GetAtt 'QueueLifecycleHook.Outputs.StackName'
+        BatchSize: '1'
+      TemplateURL: './node_modules/@cfn-modules/lambda-event-source-sqs-queue/module.yml'
+  FunctionLifecycleHook:
+    Condition: HasSubnetReachPublic
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      Parameters:
+        Handler: 'ec2-associate-address.handler'
+        Runtime: 'nodejs8.10'
+        ReservedConcurrentExecutions: '1'
+      TemplateURL: './node_modules/@cfn-modules/lambda-function/module.yml'
+  PolicyFunctionLifecycleHook:
+    Condition: HasSubnetReachPublic
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      Roles: [!GetAtt 'FunctionLifecycleHook.Outputs.RoleName']
+      PolicyName: 'ec2'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action: 'ec2:AssociateAddress'
+          Resource: '*'
+        - Effect: Allow
+          Action: 'autoscaling:CompleteLifecycleAction'
+          Resource: '*'
+  RoleLifecycleHook:
+    Condition: HasSubnetReachPublic
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: 'autoscaling.amazonaws.com'
+          Action: 'sts:AssumeRole'
+      Policies:
+      - PolicyName: sqs
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Sid: write
+            Effect: Allow
+            Action:
+            - 'sqs:SendMessage'
+            - 'sqs:GetQueueUrl'
+            Resource: !GetAtt 'QueueLifecycleHook.Outputs.Arn'
   AutoScalingGroup:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
     Properties:
       DesiredCapacity: '1'
       LaunchConfigurationName: !Ref LaunchConfiguration
+      LifecycleHookSpecificationList: !If
+      - HasSubnetReachPublic
+      - - HeartbeatTimeout: 60
+          LifecycleHookName: 'ec2-associate-address'
+          LifecycleTransition: 'autoscaling:EC2_INSTANCE_LAUNCHING'
+          NotificationMetadata: !Sub '{"AllocationId": "${ElasticIP.AllocationId}"}'
+          NotificationTargetARN: !GetAtt 'QueueLifecycleHook.Outputs.Arn'
+          RoleARN: !GetAtt 'RoleLifecycleHook.Arn'
+      - []
       MaxSize: '1'
       MinSize: '1'
       NotificationConfigurations: !If
@@ -580,7 +636,7 @@ Outputs:
   ModuleId:
     Value: 'asg-singleton-amazon-linux2'
   ModuleVersion:
-    Value: '0.0.1'
+    Value: '0.0.2'
   StackName:
     Value: !Ref 'AWS::StackName'
   Name:

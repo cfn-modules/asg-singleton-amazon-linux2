@@ -1,0 +1,9 @@
+[submodule "node_modules/@cfn-modules/sqs-queue"]
+	path = node_modules/@cfn-modules/sqs-queue
+	url = https://github.com/cfn-modules/sqs-queue
+[submodule "node_modules/@cfn-modules/lambda-function"]
+	path = node_modules/@cfn-modules/lambda-function
+	url = https://github.com/cfn-modules/lambda-function
+[submodule "node_modules/@cfn-modules/lambda-event-source-sqs-queue"]
+	path = node_modules/@cfn-modules/lambda-event-source-sqs-queue
+	url = https://github.com/cfn-modules/lambda-event-source-sqs-queue
