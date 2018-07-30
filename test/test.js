@@ -41,7 +41,6 @@ test('user-data-ingress', async t => {
     const outputs = await cfntest.getStackOutputs(stackName);
     t.log(outputs);
     const res = await axios.post(`http://${outputs.PublicIpAddress}`);
-    t.log(res);
     t.is(res.status, 200);
   } finally {
     t.log(await cfntest.deleteStack(stackName));
