@@ -1,0 +1,18 @@
+{
+  "private": true,
+  "dependencies": {
+    "eslint": "5.1.0",
+    "ava": "0.25.0",
+    "axios": "0.18.0",
+    "@cfn-modules/test": "^0.1.2",
+    "@cfn-modules/asg-singleton-amazon-linux2": "file:../",
+    "@cfn-modules/vpc": "^0.0.30",
+    "@cfn-modules/efs-file-system": "^0.0.2",
+    "@cfn-modules/client-sg": "^0.0.1",
+    "@cfn-modules/route53-hosted-zone-private": "^0.0.4",
+    "@cfn-modules/route53-hosted-zone-public": "^0.0.4"
+  },
+  "scripts": {
+    "test": "eslint . && ava -c 4 *.js"
+  }
+}
