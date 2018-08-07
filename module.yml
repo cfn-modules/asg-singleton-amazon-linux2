@@ -598,7 +598,7 @@ Resources:
             - '{"HostedZoneId": "${HostedZoneId}", "Name": "${SubDomainNameWithDot}${HostedZoneName}"}'
             - HostedZoneId: {'Fn::ImportValue': !Sub '${HostedZoneModule}-Id'}
               SubDomainNameWithDot: !Ref SubDomainNameWithDot
-              HostedZoneName:  {'Fn::ImportValue': !Sub '${HostedZoneModule}-Name'}
+              HostedZoneName: {'Fn::ImportValue': !Sub '${HostedZoneModule}-Name'}
           NotificationTargetARN: !GetAtt 'QueueLifecycleHook.Outputs.Arn'
           RoleARN: !GetAtt 'RoleLifecycleHook.Arn'
       - []
