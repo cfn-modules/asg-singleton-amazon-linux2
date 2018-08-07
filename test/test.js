@@ -1,7 +1,8 @@
 const test = require('ava');
 const cfntest = require('@cfn-modules/test');
-const axios = require('axios');
+//const axios = require('axios');
 
+/*
 test('defaults', async t => {
   const stackName = cfntest.stackName();
   try {
@@ -13,13 +14,13 @@ test('defaults', async t => {
   }
 });
 
-test('key-name', async t => {
+test('with-key-name', async t => {
   const stackName = cfntest.stackName();
   const keyName = cfntest.keyName();
   try {
     const key = await cfntest.createKey(keyName);
     try {
-      t.log(await cfntest.createStack(`${__dirname}/key-name.yml`, stackName, {
+      t.log(await cfntest.createStack(`${__dirname}/with-key-name.yml`, stackName, {
         KeyName: keyName
       }));
       const outputs = await cfntest.getStackOutputs(stackName);
@@ -34,10 +35,10 @@ test('key-name', async t => {
   }
 });
 
-test('user-data-ingress', async t => {
+test('with-user-data-and-ingress', async t => {
   const stackName = cfntest.stackName();
   try {
-    t.log(await cfntest.createStack(`${__dirname}/user-data-ingress.yml`, stackName, {}));
+    t.log(await cfntest.createStack(`${__dirname}/with-user-data-and-ingress.yml`, stackName, {}));
     const outputs = await cfntest.getStackOutputs(stackName);
     t.log(outputs);
     const res = await axios.post(`http://${outputs.PublicIpAddress}`);
@@ -48,13 +49,13 @@ test('user-data-ingress', async t => {
   }
 });
 
-test('file-system', async t => {
+test('with-file-system', async t => {
   const stackName = cfntest.stackName();
   const keyName = cfntest.keyName();
   try {
     const key = await cfntest.createKey(keyName);
     try {
-      t.log(await cfntest.createStack(`${__dirname}/file-system.yml`, stackName, {
+      t.log(await cfntest.createStack(`${__dirname}/with-file-system.yml`, stackName, {
         KeyName: keyName
       }));
       const outputs = await cfntest.getStackOutputs(stackName);
@@ -72,7 +73,28 @@ test('file-system', async t => {
     t.pass();
   }
 });
+*/
+test('with-hosted-zone-private', async t => {
+  const stackName = cfntest.stackName();
+  try {
+    t.log(await cfntest.createStack(`${__dirname}/with-hosted-zone-private.yml`, stackName, {}));
+    // what could we test here?
+  } finally {
+    t.log(await cfntest.deleteStack(stackName));
+    t.pass();
+  }
+});
+
+test('with-hosted-zone-public', async t => {
+  const stackName = cfntest.stackName();
+  try {
+    t.log(await cfntest.createStack(`${__dirname}/with-hosted-zone-public.yml`, stackName, {}));
+    // what could we test here?
+  } finally {
+    t.log(await cfntest.deleteStack(stackName));
+    t.pass();
+  }
+});
 
 // TODO test SSH access with IAM user (IAMUserSSHAccess := true)
 // TODO test SSH access with BastionModule
-// TODO test FileSystemModule1

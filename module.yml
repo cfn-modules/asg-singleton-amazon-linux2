@@ -161,6 +161,7 @@ Conditions:
   HasClientSgModule1: !Not [!Equals [!Ref ClientSgModule1, '']]
   HasClientSgModule2: !Not [!Equals [!Ref ClientSgModule2, '']]
   HasClientSgModule3: !Not [!Equals [!Ref ClientSgModule3, '']]
+  HasLifecycleHook: !Or [!Condition HasSubnetReachPublic, !Condition HasHostedZoneModuleAndSubnetReachPrivate]
 Resources:
   RecordSetPublicIpAddress:
     Condition: HasHostedZoneModuleAndSubnetReachPublic
@@ -298,19 +299,6 @@ Resources:
         - Effect: Allow
           Action: 'ec2:DescribeTags'
           Resource: '*'
-  PolicyChangeResourceRecordSets:
-    Type: 'AWS::IAM::Policy'
-    Condition: HasHostedZoneModuleAndSubnetReachPrivate
-    Properties:
-      Roles:
-      - !Ref Role
-      PolicyName: 'route53'
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-        - Effect: Allow
-          Action: 'route53:ChangeResourceRecordSets'
-          Resource: !Join ['', ['arn:aws:route53:::hostedzone/', {'Fn::ImportValue': !Sub '${HostedZoneModule}-Id'}]]
   ElasticIP:
     Condition: HasSubnetReachPublic
     Type: 'AWS::EC2::EIP'
@@ -496,7 +484,7 @@ Resources:
         - |
             #!/bin/bash -ex
             trap '/opt/aws/bin/cfn-signal -e 1 --region ${Region} --stack ${StackName} --resource AutoScalingGroup' ERR
-            ${UserDataUpdateRecordSet}
+            ${UserDataAwaitElasticIP}
             ${UserDataMountFileSystem1}
             mount -a
             /opt/aws/bin/cfn-init -v --region ${Region} --stack ${StackName} --resource LaunchConfiguration
@@ -504,18 +492,18 @@ Resources:
             /opt/aws/bin/cfn-signal -e 0 --region ${Region} --stack ${StackName} --resource AutoScalingGroup
         - Region: !Ref 'AWS::Region'
           StackName: !Ref 'AWS::StackName'
-          UserDataUpdateRecordSet: !If [HasHostedZoneModuleAndSubnetReachPrivate, !Join ['', ['aws route53 change-resource-record-sets --hosted-zone-id ', {'Fn::ImportValue': !Sub '${HostedZoneModule}-Id'}, ' --change-batch "{\"Changes\": [{\"Action\": \"UPSERT\", \"ResourceRecordSet\": {\"Name\": \"', !Ref SubDomainNameWithDot, {'Fn::ImportValue': !Sub '${HostedZoneModule}-Name'}, '\", \"Type\": \"A\", \"TTL\": 60, \"ResourceRecords\": [{\"Value\": \"$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)\"}]}}]}"']], ''] # TODO should also be moved inside lifecyclehook
+          UserDataAwaitElasticIP: !If [HasSubnetReachPublic, !Sub 'while [ "$(curl -s -m 6 --retry 3 --retry-delay 1 "http://169.254.169.254/latest/meta-data/public-ipv4")" != "${ElasticIP.AllocationId}" ]; do sleep 1; done && curl -s -m 6 --retry 30 --retry-delay 1 -I "https://aws.amazon.com/"', ''] # wait for ElasticIP association and test Internet connectivity to make sure the EIP was assigned (still race condition possible, but AWS does not provide us any status information about ElasticIP associations)
           UserDataMountFileSystem1: !If [HasFileSystemModule1, !Join ['', ['yum install -y amazon-efs-utils && mkdir -p /mnt/efs1 && echo "', {'Fn::ImportValue': !Sub '${FileSystemModule1}-Id'}, ':/ /mnt/efs1 efs defaults,_netdev 0 0" >> /etc/fstab']], '']
           UserData: !Ref UserData
   QueueLifecycleHook:
-    Condition: HasSubnetReachPublic
+    Condition: HasLifecycleHook
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       Parameters:
         AlertingModule: !Ref AlertingModule
       TemplateURL: './node_modules/@cfn-modules/sqs-queue/module.yml'
   QueueLifecycleHookEventSource:
-    Condition: HasSubnetReachPublic
+    Condition: HasLifecycleHook
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       Parameters:
@@ -524,7 +512,7 @@ Resources:
         BatchSize: '1'
       TemplateURL: './node_modules/@cfn-modules/lambda-event-source-sqs-queue/module.yml'
   FunctionLifecycleHook:
-    Condition: HasSubnetReachPublic
+    Condition: HasLifecycleHook
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       Parameters:
@@ -533,22 +521,46 @@ Resources:
         ReservedConcurrentExecutions: '1'
       TemplateURL: './node_modules/@cfn-modules/lambda-function/module.yml'
   PolicyFunctionLifecycleHook:
+    Condition: HasLifecycleHook
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      Roles: [!GetAtt 'FunctionLifecycleHook.Outputs.RoleName']
+      PolicyName: 'LifecycleHook'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action: 'autoscaling:CompleteLifecycleAction'
+          Resource: '*'
+  AssociateAddressPolicyFunctionLifecycleHook:
     Condition: HasSubnetReachPublic
     Type: 'AWS::IAM::Policy'
     Properties:
       Roles: [!GetAtt 'FunctionLifecycleHook.Outputs.RoleName']
-      PolicyName: 'ec2'
+      PolicyName: 'AssociateAddress'
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
         - Effect: Allow
           Action: 'ec2:AssociateAddress'
           Resource: '*'
+  ChangeResourceRecordSetsPolicyFunctionLifecycleHook:
+    Condition: HasHostedZoneModuleAndSubnetReachPrivate
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      Roles: [!GetAtt 'FunctionLifecycleHook.Outputs.RoleName']
+      PolicyName: 'ChangeResourceRecordSets'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
         - Effect: Allow
-          Action: 'autoscaling:CompleteLifecycleAction'
+          Action: 'route53:ChangeResourceRecordSets'
+          Resource: !Join ['', ['arn:aws:route53:::hostedzone/', {'Fn::ImportValue': !Sub '${HostedZoneModule}-Id'}]]
+        - Effect: Allow
+          Action: 'ec2:DescribeInstances'
           Resource: '*'
   RoleLifecycleHook:
-    Condition: HasSubnetReachPublic
+    Condition: HasLifecycleHook
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
@@ -575,11 +587,18 @@ Resources:
       DesiredCapacity: '1'
       LaunchConfigurationName: !Ref LaunchConfiguration
       LifecycleHookSpecificationList: !If
-      - HasSubnetReachPublic
+      - HasLifecycleHook
       - - HeartbeatTimeout: 60
           LifecycleHookName: 'ec2-associate-address'
           LifecycleTransition: 'autoscaling:EC2_INSTANCE_LAUNCHING'
-          NotificationMetadata: !Sub '{"AllocationId": "${ElasticIP.AllocationId}"}'
+          NotificationMetadata: !If
+          - HasSubnetReachPublic
+          - !Sub '{"AllocationId": "${ElasticIP.AllocationId}"}'
+          - !Sub
+            - '{"HostedZoneId": "${HostedZoneId}", "Name": "${SubDomainNameWithDot}${HostedZoneName}"}'
+            - HostedZoneId: {'Fn::ImportValue': !Sub '${HostedZoneModule}-Id'}
+              SubDomainNameWithDot: !Ref SubDomainNameWithDot
+              HostedZoneName:  {'Fn::ImportValue': !Sub '${HostedZoneModule}-Name'}
           NotificationTargetARN: !GetAtt 'QueueLifecycleHook.Outputs.Arn'
           RoleARN: !GetAtt 'RoleLifecycleHook.Arn'
       - []

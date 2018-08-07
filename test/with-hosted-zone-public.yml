@@ -2,6 +2,12 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: 'cfn-modules test'
 Resources:
+  HostedZone:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      Parameters:
+        Name: 'widdix.de'
+      TemplateURL: './node_modules/@cfn-modules/route53-hosted-zone-public/module.yml'
   Vpc:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
@@ -16,7 +22,5 @@ Resources:
     Properties:
       Parameters:
         VpcModule: !GetAtt 'Vpc.Outputs.StackName'
+        HostedZoneModule: !GetAtt 'HostedZone.Outputs.StackName'
       TemplateURL: './node_modules/@cfn-modules/asg-singleton-amazon-linux2/module.yml'
-Outputs:
-  PublicIpAddress:
-    Value: !GetAtt 'Asg.Outputs.PublicIpAddress'
