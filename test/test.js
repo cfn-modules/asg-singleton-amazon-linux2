@@ -24,7 +24,7 @@ test('with-key-name', async t => {
       }));
       const outputs = await cfntest.getStackOutputs(stackName);
       t.log(outputs);
-      await cfntest.probeSSH(`ec2-user@${outputs.PublicIpAddress}`, key);
+      t.log(await cfntest.probeSSH(`ec2-user@${outputs.PublicIpAddress}`, key));
     } finally {
       t.log(await cfntest.deleteStack(stackName));
     }
@@ -59,7 +59,7 @@ test('with-file-system', async t => {
       }));
       const outputs = await cfntest.getStackOutputs(stackName);
       t.log(outputs);
-      await cfntest.probeSSH(`ec2-user@${outputs.PublicIpAddress}`, key, 'echo -n "test" > /mnt/efs1/test.txt');
+      t.log(await cfntest.probeSSH(`ec2-user@${outputs.PublicIpAddress}`, key, 'echo -n "test" > /mnt/efs1/test.txt'));
       // TODO kill EC2 instance and wait for new instance to become available...
       const stdout = await cfntest.probeSSH(`ec2-user@${outputs.PublicIpAddress}`, key, 'cat /mnt/efs1/test.txt');
       t.log(stdout);
