@@ -109,7 +109,7 @@ Parameters:
 Mappings:
   VersionMap:
     '2.0.20181114':
-      Map:  RegionMap2020181114
+      Map: RegionMap2020181114
     '2.0.20180622.1':
       Map: RegionMap20201806221
   RegionMap2020181114:
