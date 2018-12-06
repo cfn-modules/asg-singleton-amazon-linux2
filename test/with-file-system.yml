@@ -38,6 +38,7 @@ Resources:
         ClientSgModule1: !GetAtt 'ClientSg.Outputs.StackName'
         FileSystemModule1: !GetAtt 'FileSystem.Outputs.StackName'
         UserData: 'chmod 777 /mnt/efs1'
+        AmazonLinux2Version: '2.0.20181114'
       TemplateURL: './node_modules/@cfn-modules/asg-singleton-amazon-linux2/module.yml'
 Outputs:
   PublicIpAddress:

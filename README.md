@@ -45,7 +45,7 @@ Resources:
         ClientSgModule2: '' # optional
         ClientSgModule3: '' # optional
         FileSystemModule1: '' # optional
-        AmazonLinux2Version: '2.0.20180622.1' # optional
+        AmazonLinux2Version: '2.0.20181114' # set this to the latest available version!
       TemplateURL: './node_modules/@cfn-modules/asg-singleton-amazon-linux2/module.yml'
 ```
 
