@@ -73,7 +73,7 @@ test('with-file-system', async t => {
   }
 });
 
-// FIXME the problem is that the private zone stack can not be deleted because the entry (8.8.8.8) was changed
+// TODO the problem is that the private zone stack can not be deleted because the entry (8.8.8.8) was changed
 /*test('with-hosted-zone-private', async t => {
   const stackName = cfntest.stackName();
   try {
