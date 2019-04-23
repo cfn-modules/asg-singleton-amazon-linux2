@@ -298,8 +298,19 @@ Resources:
           Principal:
             Service: 'ec2.amazonaws.com'
           Action: 'sts:AssumeRole'
-      ManagedPolicyArns: !If [HasSystemsManagerAccess, ['arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM'], []]
       Policies:
+      - !If
+        - HasSystemsManagerAccess
+        - PolicyName: ssm
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action:
+              - 'ssmmessages:*'
+              - 'ec2messages:*'
+              Resource: !GetAtt 'LogGroup.Arn'
+        - !Ref 'AWS::NoValue'
       - PolicyName: logs
         PolicyDocument:
           Version: '2012-10-17'
