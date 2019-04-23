@@ -329,7 +329,7 @@ Resources:
           Action:
           - 'iam:ListSSHPublicKeys'
           - 'iam:GetSSHPublicKey'
-          Resource: !Sub 'arn:aws:iam::${AWS::AccountId}:user/*'
+          Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:user/*'
         - Effect: Allow
           Action: 'ec2:DescribeTags'
           Resource: '*'
@@ -358,7 +358,7 @@ Resources:
         Statement:
         - Effect: Allow
           Action: 'route53:ChangeResourceRecordSets'
-          Resource: !Join ['', ['arn:aws:route53:::hostedzone/', {'Fn::ImportValue': !Sub '${HostedZoneModule}-Id'}]]
+          Resource: !Join ['', ['arn:', !Ref 'AWS::Partition', ':route53:::hostedzone/', {'Fn::ImportValue': !Sub '${HostedZoneModule}-Id'}]]
   ElasticIP:
     Condition: HasSubnetReachPublic
     Type: 'AWS::EC2::EIP'
