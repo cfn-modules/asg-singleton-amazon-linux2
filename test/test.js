@@ -2,7 +2,7 @@ const test = require('ava');
 const cfntest = require('@cfn-modules/test');
 const axios = require('axios');
 
-test('defaults', async t => {
+test.serial('defaults', async t => {
   const stackName = cfntest.stackName();
   try {
     t.log(await cfntest.createStack(`${__dirname}/defaults.yml`, stackName, {}));
@@ -13,7 +13,7 @@ test('defaults', async t => {
   }
 });
 
-test('with-key-name', async t => {
+test.serial('with-key-name', async t => {
   const stackName = cfntest.stackName();
   const keyName = cfntest.keyName();
   try {
@@ -34,7 +34,7 @@ test('with-key-name', async t => {
   }
 });
 
-test('with-user-data-and-ingress', async t => {
+test.serial('with-user-data-and-ingress', async t => {
   const stackName = cfntest.stackName();
   try {
     t.log(await cfntest.createStack(`${__dirname}/with-user-data-and-ingress.yml`, stackName, {}));
@@ -48,7 +48,7 @@ test('with-user-data-and-ingress', async t => {
   }
 });
 
-test('with-file-system', async t => {
+test.serial('with-file-system', async t => {
   const stackName = cfntest.stackName();
   const keyName = cfntest.keyName();
   try {
@@ -74,7 +74,7 @@ test('with-file-system', async t => {
 });
 
 // TODO the problem is that the private zone stack can not be deleted because the entry (8.8.8.8) was changed
-/*test('with-hosted-zone-private', async t => {
+/*test.serial('with-hosted-zone-private', async t => {
   const stackName = cfntest.stackName();
   try {
     t.log(await cfntest.createStack(`${__dirname}/with-hosted-zone-private.yml`, stackName, {}));
@@ -85,7 +85,7 @@ test('with-file-system', async t => {
   }
 });*/
 
-test('with-hosted-zone-public', async t => {
+test.serial('with-hosted-zone-public', async t => {
   const stackName = cfntest.stackName();
   try {
     t.log(await cfntest.createStack(`${__dirname}/with-hosted-zone-public.yml`, stackName, {}));
