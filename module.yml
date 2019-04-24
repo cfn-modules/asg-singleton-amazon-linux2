@@ -614,7 +614,7 @@ Outputs:
   ModuleId:
     Value: 'asg-singleton-amazon-linux2'
   ModuleVersion:
-    Value: '1.4.1'
+    Value: '1.4.2'
   StackName:
     Value: !Ref 'AWS::StackName'
   Name:
