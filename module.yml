@@ -309,7 +309,21 @@ Resources:
               Action:
               - 'ssmmessages:*'
               - 'ec2messages:*'
-              Resource: !GetAtt 'LogGroup.Arn'
+              - 'ssm:DescribeAssociation'
+              - 'ssm:GetDeployablePatchSnapshotForInstance'
+              - 'ssm:GetDocument'
+              - 'ssm:DescribeDocument'
+              - 'ssm:GetManifest'
+              - 'ssm:GetParameters'
+              - 'ssm:ListAssociations'
+              - 'ssm:ListInstanceAssociations'
+              - 'ssm:PutInventory'
+              - 'ssm:PutComplianceItems'
+              - 'ssm:PutConfigurePackageResult'
+              - 'ssm:UpdateAssociationStatus'
+              - 'ssm:UpdateInstanceAssociationStatus'
+              - 'ssm:UpdateInstanceInformation'
+              Resource: '*'
         - !Ref 'AWS::NoValue'
       - PolicyName: logs
         PolicyDocument:
