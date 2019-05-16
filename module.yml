@@ -41,7 +41,7 @@ Parameters:
     Default: false
     AllowedValues: [true, false]
   SystemsManagerAccess:
-    Description: 'Enable AWS Systems Manager agent and authorization.'
+    Description: 'Enable AWS Systems Manager agent and Session Manager.'
     Type: String
     Default: true
     AllowedValues: [true, false]
@@ -106,6 +106,10 @@ Parameters:
     Type: String
     Default: '2.0.20180622.1'
     AllowedValues: ['2.0.20181114', '2.0.20180622.1']
+  ManagedPolicyArns:
+    Description: 'Optional comma-delimited list of IAM managed policy ARNs to attach to the instance''s IAM role'
+    Type: String
+    Default: ''
 Mappings:
   VersionMap:
     '2.0.20181114':
@@ -196,6 +200,7 @@ Conditions:
   HasClientSgModule1: !Not [!Equals [!Ref ClientSgModule1, '']]
   HasClientSgModule2: !Not [!Equals [!Ref ClientSgModule2, '']]
   HasClientSgModule3: !Not [!Equals [!Ref ClientSgModule3, '']]
+  HasManagedPolicyArns: !Not [!Equals [!Ref ManagedPolicyArns, '']]
 Resources:
   RecordSetPublicIpAddress:
     Condition: HasHostedZoneModuleAndSubnetReachPublic
@@ -298,6 +303,7 @@ Resources:
           Principal:
             Service: 'ec2.amazonaws.com'
           Action: 'sts:AssumeRole'
+      ManagedPolicyArns: !If [HasManagedPolicyArns, !Split [',', !Ref ManagedPolicyArns], !Ref 'AWS::NoValue']
       Policies:
       - !If
         - HasSystemsManagerAccess
@@ -307,22 +313,9 @@ Resources:
             Statement:
             - Effect: Allow
               Action:
-              - 'ssmmessages:*'
-              - 'ec2messages:*'
-              - 'ssm:DescribeAssociation'
-              - 'ssm:GetDeployablePatchSnapshotForInstance'
-              - 'ssm:GetDocument'
-              - 'ssm:DescribeDocument'
-              - 'ssm:GetManifest'
-              - 'ssm:GetParameters'
-              - 'ssm:ListAssociations'
-              - 'ssm:ListInstanceAssociations'
-              - 'ssm:PutInventory'
-              - 'ssm:PutComplianceItems'
-              - 'ssm:PutConfigurePackageResult'
-              - 'ssm:UpdateAssociationStatus'
-              - 'ssm:UpdateInstanceAssociationStatus'
-              - 'ssm:UpdateInstanceInformation'
+              - 'ssmmessages:*' # SSM Agent by https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-setting-up-messageAPIs.html
+              - 'ssm:UpdateInstanceInformation' # SSM agent by https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-setting-up-messageAPIs.html
+              - 'ec2messages:*' # SSM Session Manager by https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-setting-up-messageAPIs.html
               Resource: '*'
         - !Ref 'AWS::NoValue'
       - PolicyName: logs
@@ -331,6 +324,7 @@ Resources:
           Statement:
           - Effect: Allow
             Action:
+            - 'logs:CreateLogGroup'
             - 'logs:CreateLogStream'
             - 'logs:PutLogEvents'
             - 'logs:DescribeLogStreams'
@@ -639,7 +633,7 @@ Outputs:
   ModuleId:
     Value: 'asg-singleton-amazon-linux2'
   ModuleVersion:
-    Value: '1.4.2'
+    Value: '2.0.0'
   StackName:
     Value: !Ref 'AWS::StackName'
   Name:
