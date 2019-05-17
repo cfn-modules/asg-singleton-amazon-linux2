@@ -105,7 +105,7 @@ Parameters:
     Description: 'Optional version of Amazon Linux 2.'
     Type: String
     Default: '2.0.20180622.1'
-    AllowedValues: ['2.0.20190508', ''2.0.20181114', '2.0.20180622.1']
+    AllowedValues: ['2.0.20190508', '2.0.20181114', '2.0.20180622.1']
   ManagedPolicyArns:
     Description: 'Optional comma-delimited list of IAM managed policy ARNs to attach to the instance''s IAM role'
     Type: String
