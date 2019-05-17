@@ -105,17 +105,50 @@ Parameters:
     Description: 'Optional version of Amazon Linux 2.'
     Type: String
     Default: '2.0.20180622.1'
-    AllowedValues: ['2.0.20181114', '2.0.20180622.1']
+    AllowedValues: ['2.0.20190508', ''2.0.20181114', '2.0.20180622.1']
   ManagedPolicyArns:
     Description: 'Optional comma-delimited list of IAM managed policy ARNs to attach to the instance''s IAM role'
     Type: String
     Default: ''
 Mappings:
   VersionMap:
-    '2.0.20181114':
-      Map: RegionMap2020181114
     '2.0.20180622.1':
       Map: RegionMap20201806221
+    '2.0.20181114':
+      Map: RegionMap2020181114
+    '2.0.20190508':
+      Map: RegionMap2020190508
+  RegionMap20201806221:
+    'ap-south-1':
+      ImageId: 'ami-d783a9b8'
+    'eu-west-3':
+      ImageId: 'ami-2cf54551'
+    'eu-west-2':
+      ImageId: 'ami-b8b45ddf'
+    'eu-west-1':
+      ImageId: 'ami-466768ac'
+    'ap-northeast-2':
+      ImageId: 'ami-afd86dc1'
+    'ap-northeast-1':
+      ImageId: 'ami-e99f4896'
+    'sa-east-1':
+      ImageId: 'ami-6dca9001'
+    'ca-central-1':
+      ImageId: 'ami-0ee86a6a'
+    'ap-southeast-1':
+      ImageId: 'ami-05868579'
+    'ap-southeast-2':
+      ImageId: 'ami-39f8215b'
+    'eu-central-1':
+      ImageId: 'ami-7c4f7097'
+    'us-east-1':
+      ImageId: 'ami-b70554c8'
+    'us-east-2':
+      ImageId: 'ami-8c122be9'
+    'us-west-1':
+      ImageId: 'ami-e0ba5c83'
+    'us-west-2':
+      ImageId: 'ami-a9d09ed1'
   RegionMap2020181114:
     'ap-south-1':
       ImageId: 'ami-06bcd1131b2f55803'
@@ -149,37 +182,39 @@ Mappings:
       ImageId: 'ami-011b6930a81cd6aaf'
     'us-west-2':
       ImageId: 'ami-01bbe152bf19d0289'
-  RegionMap20201806221:
+  RegionMap2020190508:
+    'eu-north-1':
+      ImageId: 'ami-1fb13961'
     'ap-south-1':
-      ImageId: 'ami-d783a9b8'
+      ImageId: 'ami-00e782930f1c3dbc7'
     'eu-west-3':
-      ImageId: 'ami-2cf54551'
+      ImageId: 'ami-0ebb3a801d5fb8b9b'
     'eu-west-2':
-      ImageId: 'ami-b8b45ddf'
+      ImageId: 'ami-0009a33f033d8b7b6'
     'eu-west-1':
-      ImageId: 'ami-466768ac'
+      ImageId: 'ami-030dbca661d402413'
     'ap-northeast-2':
-      ImageId: 'ami-afd86dc1'
+      ImageId: 'ami-08ab3f7e72215fe91'
     'ap-northeast-1':
-      ImageId: 'ami-e99f4896'
+      ImageId: 'ami-00d101850e971728d'
     'sa-east-1':
-      ImageId: 'ami-6dca9001'
+      ImageId: 'ami-058141e091292ecf0'
     'ca-central-1':
-      ImageId: 'ami-0ee86a6a'
+      ImageId: 'ami-08a9b721ecc5b0a53'
     'ap-southeast-1':
-      ImageId: 'ami-05868579'
+      ImageId: 'ami-0b5a47f8865280111'
     'ap-southeast-2':
-      ImageId: 'ami-39f8215b'
+      ImageId: 'ami-0fb7513bcdc525c3b'
     'eu-central-1':
-      ImageId: 'ami-7c4f7097'
+      ImageId: 'ami-0ebe657bc328d4e82'
     'us-east-1':
-      ImageId: 'ami-b70554c8'
+      ImageId: 'ami-0c6b1d09930fac512'
     'us-east-2':
-      ImageId: 'ami-8c122be9'
+      ImageId: 'ami-0ebbf2179e615c338'
     'us-west-1':
-      ImageId: 'ami-e0ba5c83'
+      ImageId: 'ami-015954d5e5548d13b'
     'us-west-2':
-      ImageId: 'ami-a9d09ed1'
+      ImageId: 'ami-0cb72367e98845d43'
 Conditions:
   HasAlertingModule: !Not [!Equals [!Ref AlertingModule, '']]
   HasBastionModule: !Not [!Equals [!Ref BastionModule, '']]
