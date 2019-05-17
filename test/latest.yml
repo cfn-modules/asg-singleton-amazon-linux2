@@ -16,6 +16,7 @@ Resources:
     Properties:
       Parameters:
         VpcModule: !GetAtt 'Vpc.Outputs.StackName'
+        AmazonLinux2Version: '2.0.20190508'
       TemplateURL: './node_modules/@cfn-modules/asg-singleton-amazon-linux2/module.yml'
 Outputs:
   PublicIpAddress:
