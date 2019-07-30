@@ -609,7 +609,7 @@ Resources:
           StackName: !Ref 'AWS::StackName'
           UserDataAttachElasticIP: !If [HasSubnetReachPublic, !Sub 'aws --region ${AWS::Region} ec2 associate-address --instance-id $(curl -s -m 60 http://169.254.169.254/latest/meta-data/instance-id) --allocation-id ${ElasticIP.AllocationId} && sleep 5', ''] # TODO get rid of sleep 5 to fix the problem that the ElasticIP association interrupts Internet access for an unknown amount of time
           UserDataUpdateRecordSet: !If [HasHostedZoneModuleAndSubnetReachPrivate, !Join ['', ['aws route53 change-resource-record-sets --hosted-zone-id ', {'Fn::ImportValue': !Sub '${HostedZoneModule}-Id'}, ' --change-batch "{\"Changes\": [{\"Action\": \"UPSERT\", \"ResourceRecordSet\": {\"Name\": \"', !Ref SubDomainNameWithDot, {'Fn::ImportValue': !Sub '${HostedZoneModule}-Name'}, '\", \"Type\": \"A\", \"TTL\": 60, \"ResourceRecords\": [{\"Value\": \"$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)\"}]}}]}"']], '']
-          UserDataMountFileSystem1: !If [HasFileSystemModule1, !Join ['', ['yum install -y amazon-efs-utils && mkdir -p /mnt/efs1 && echo "', {'Fn::ImportValue': !Sub '${FileSystemModule1}-Id'}, ':/ /mnt/efs1 efs defaults,_netdev 0 0" >> /etc/fstab']], '']
+          UserDataMountFileSystem1: !If [HasFileSystemModule1, !Join ['', ['yum install -y amazon-efs-utils && mkdir -p /mnt/efs1 && echo "', {'Fn::ImportValue': !Sub '${FileSystemModule1}-Id'}, ':/ /mnt/efs1 efs tls,_netdev 0 0" >> /etc/fstab']], '']
           UserData: !Ref UserData
   AutoScalingGroup:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
@@ -668,7 +668,7 @@ Outputs:
   ModuleId:
     Value: 'asg-singleton-amazon-linux2'
   ModuleVersion:
-    Value: '2.1.0'
+    Value: '2.2.0'
   StackName:
     Value: !Ref 'AWS::StackName'
   Name:
