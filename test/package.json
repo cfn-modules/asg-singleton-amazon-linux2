@@ -1,13 +1,13 @@
 {
   "private": true,
   "dependencies": {
-    "eslint": "6.0.1",
-    "ava": "2.2.0",
+    "eslint": "6.2.2",
+    "ava": "2.3.0",
     "axios": "0.19.0",
     "@cfn-modules/test": "0.5.1",
     "@cfn-modules/asg-singleton-amazon-linux2": "file:../",
     "@cfn-modules/vpc": "1.1.1",
-    "@cfn-modules/efs-file-system": "1.0.0",
+    "@cfn-modules/efs-file-system": "1.2.0",
     "@cfn-modules/client-sg": "1.0.0",
     "@cfn-modules/route53-hosted-zone-private": "1.0.0",
     "@cfn-modules/route53-hosted-zone-public": "1.0.0"
