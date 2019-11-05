@@ -1,10 +1,9 @@
 {
   "private": true,
   "dependencies": {
-    "eslint": "6.2.2",
-    "ava": "2.3.0",
-    "axios": "0.19.0",
-    "@cfn-modules/test": "0.5.1",
+    "eslint": "6.6.0",
+    "ava": "2.4.0",
+    "@cfn-modules/test": "0.7.3",
     "@cfn-modules/asg-singleton-amazon-linux2": "file:../",
     "@cfn-modules/vpc": "1.1.1",
     "@cfn-modules/efs-file-system": "1.2.0",

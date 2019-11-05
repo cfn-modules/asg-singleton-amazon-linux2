@@ -1,6 +1,5 @@
 const test = require('ava');
 const cfntest = require('@cfn-modules/test');
-const axios = require('axios');
 
 test.serial('defaults', async t => {
   const stackName = cfntest.stackName();
@@ -51,7 +50,7 @@ test.serial('with-user-data-and-ingress', async t => {
     t.log(await cfntest.createStack(`${__dirname}/with-user-data-and-ingress.yml`, stackName, {}));
     const outputs = await cfntest.getStackOutputs(stackName);
     t.log(outputs);
-    const res = await axios.get(`http://${outputs.PublicIpAddress}`);
+    const res = await cfntest.probeHttpGet(`http://${outputs.PublicIpAddress}`);
     t.is(res.status, 200);
   } finally {
     t.log(await cfntest.deleteStack(stackName));
