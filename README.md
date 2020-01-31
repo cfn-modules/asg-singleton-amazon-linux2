@@ -39,8 +39,11 @@ Resources:
         SubDomainNameWithDot: 'test.' # optional
         UserData: '' # optional
         IngressTcpPort1: '' # optional
+        IngressTcpClientSgModule1: '' # optional
         IngressTcpPort2: '' # optional
+        IngressTcpClientSgModule2: '' # optional
         IngressTcpPort3: '' # optional
+        IngressTcpClientSgModule3: '' # optional
         ClientSgModule1: '' # optional
         ClientSgModule2: '' # optional
         ClientSgModule3: '' # optional
@@ -178,8 +181,22 @@ Resources:
       <td></td>
     </tr>
     <tr>
+      <td>IngressTcpClientSgModule1</td>
+      <td>Stack name of <a href="https://www.npmjs.com/package/@cfn-modules/client-sg">client-sg module</a> that is required to access IngressTcpPort1 (if you leave this blank, IngressTcpPort1 is open to the world 0.0.0.0/0)</td>
+      <td></td>
+      <td>no</td>
+      <td></td>
+    </tr>
+    <tr>
       <td>IngressTcpPort2</td>
       <td>Port allowing ingress TCP traffic</td>
+      <td></td>
+      <td>no</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>IngressTcpClientSgModule2</td>
+      <td>Stack name of <a href="https://www.npmjs.com/package/@cfn-modules/client-sg">client-sg module</a> that is required to access IngressTcpPort2 (if you leave this blank, IngressTcpPort2 is open to the world 0.0.0.0/0)</td>
       <td></td>
       <td>no</td>
       <td></td>
@@ -192,22 +209,29 @@ Resources:
       <td></td>
     </tr>
     <tr>
+      <td>IngressTcpClientSgModule3</td>
+      <td>Stack name of <a href="https://www.npmjs.com/package/@cfn-modules/client-sg">client-sg module</a> that is required to access IngressTcpPort3 (if you leave this blank, IngressTcpPort3 is open to the world 0.0.0.0/0)</td>
+      <td></td>
+      <td>no</td>
+      <td></td>
+    </tr>
+    <tr>
       <td>ClientSgModule1</td>
-      <td>Stack name of <a href="https://www.npmjs.com/package/@cfn-modules/client-sg">client-sg module</a> module to mark traffic from EC2 instance</td>
+      <td>Stack name of <a href="https://www.npmjs.com/package/@cfn-modules/client-sg">client-sg module</a> to mark traffic from EC2 instance</td>
       <td></td>
       <td>no</td>
       <td></td>
     </tr>
     <tr>
       <td>ClientSgModule2</td>
-      <td>Stack name of <a href="https://www.npmjs.com/package/@cfn-modules/client-sg">client-sg module</a> module to mark traffic from EC2 instance</td>
+      <td>Stack name of <a href="https://www.npmjs.com/package/@cfn-modules/client-sg">client-sg module</a> to mark traffic from EC2 instance</td>
       <td></td>
       <td>no</td>
       <td></td>
     </tr>
     <tr>
       <td>ClientSgModule3</td>
-      <td>Stack name of <a href="https://www.npmjs.com/package/@cfn-modules/client-sg">client-sg module</a> module to mark traffic from EC2 instance</td>
+      <td>Stack name of <a href="https://www.npmjs.com/package/@cfn-modules/client-sg">client-sg module</a> to mark traffic from EC2 instance</td>
       <td></td>
       <td>no</td>
       <td></td>

@@ -77,12 +77,24 @@ Parameters:
     Description: 'Optional port allowing ingress TCP traffic.'
     Type: String
     Default: ''
+  IngressTcpClientSgModule1:
+    Description: 'Optional stack name of client-sg module that is required to access IngressTcpPort1 (if you leave this blank, IngressTcpPort1 is open to the world 0.0.0.0/0).'
+    Type: String
+    Default: ''
   IngressTcpPort2:
     Description: 'Optional port allowing ingress TCP traffic.'
     Type: String
     Default: ''
+  IngressTcpClientSgModule2:
+    Description: 'Optional stack name of client-sg module that is required to access IngressTcpPort2 (if you leave this blank, IngressTcpPort2 is open to the world 0.0.0.0/0).'
+    Type: String
+    Default: ''
   IngressTcpPort3:
     Description: 'Optional port allowing ingress TCP traffic.'
+    Type: String
+    Default: ''
+  IngressTcpClientSgModule3:
+    Description: 'Optional stack name of client-sg module that is required to access IngressTcpPort3 (if you leave this blank, IngressTcpPort3 is open to the world 0.0.0.0/0).'
     Type: String
     Default: ''
   ClientSgModule1:
@@ -228,8 +240,11 @@ Conditions:
   HasSubnetReachPublic: !Equals [!Ref SubnetReach, Public]
   HasSubnetReachPrivate: !Equals [!Ref SubnetReach, Private]
   HasIngressTcpPort1: !Not [!Equals [!Ref IngressTcpPort1, '']]
+  HasIngressTcpClientSgModule1: !Not [!Equals [!Ref IngressTcpClientSgModule1, '']]
   HasIngressTcpPort2: !Not [!Equals [!Ref IngressTcpPort2, '']]
+  HasIngressTcpClientSgModule2: !Not [!Equals [!Ref IngressTcpClientSgModule2, '']]
   HasIngressTcpPort3: !Not [!Equals [!Ref IngressTcpPort3, '']]
+  HasIngressTcpClientSgModule3: !Not [!Equals [!Ref IngressTcpClientSgModule3, '']]
   HasHostedZoneModuleAndSubnetReachPublic: !And [!Condition HasHostedZoneModule, !Condition HasSubnetReachPublic]
   HasHostedZoneModuleAndSubnetReachPrivate: !And [!Condition HasHostedZoneModule, !Condition HasSubnetReachPrivate]
   HasClientSgModule1: !Not [!Equals [!Ref ClientSgModule1, '']]
@@ -304,7 +319,8 @@ Resources:
       IpProtocol: tcp
       FromPort: !Ref IngressTcpPort1
       ToPort: !Ref IngressTcpPort1
-      CidrIp: '0.0.0.0/0'
+      SourceSecurityGroupId: !If [HasIngressTcpClientSgModule1, {'Fn::ImportValue': !Sub '${IngressTcpClientSgModule1}-SecurityGroupId'}, !Ref 'AWS::NoValue']
+      CidrIp: !If [HasIngressTcpClientSgModule1, !Ref 'AWS::NoValue', '0.0.0.0/0']
   SecurityGroupIngressTcpPort2:
     Type: 'AWS::EC2::SecurityGroupIngress'
     Condition: HasIngressTcpPort2
@@ -313,7 +329,8 @@ Resources:
       IpProtocol: tcp
       FromPort: !Ref IngressTcpPort2
       ToPort: !Ref IngressTcpPort2
-      CidrIp: '0.0.0.0/0'
+      SourceSecurityGroupId: !If [HasIngressTcpClientSgModule2, {'Fn::ImportValue': !Sub '${IngressTcpClientSgModule2}-SecurityGroupId'}, !Ref 'AWS::NoValue']
+      CidrIp: !If [HasIngressTcpClientSgModule2, !Ref 'AWS::NoValue', '0.0.0.0/0']
   SecurityGroupIngressTcpPort3:
     Type: 'AWS::EC2::SecurityGroupIngress'
     Condition: HasIngressTcpPort3
@@ -322,7 +339,8 @@ Resources:
       IpProtocol: tcp
       FromPort: !Ref IngressTcpPort3
       ToPort: !Ref IngressTcpPort3
-      CidrIp: '0.0.0.0/0'
+      SourceSecurityGroupId: !If [HasIngressTcpClientSgModule3, {'Fn::ImportValue': !Sub '${IngressTcpClientSgModule3}-SecurityGroupId'}, !Ref 'AWS::NoValue']
+      CidrIp: !If [HasIngressTcpClientSgModule3, !Ref 'AWS::NoValue', '0.0.0.0/0']
   InstanceProfile:
     Type: 'AWS::IAM::InstanceProfile'
     Properties:
@@ -668,7 +686,7 @@ Outputs:
   ModuleId:
     Value: 'asg-singleton-amazon-linux2'
   ModuleVersion:
-    Value: '2.2.0'
+    Value: '2.3.0'
   StackName:
     Value: !Ref 'AWS::StackName'
   Name:

@@ -21,26 +21,32 @@ Resources:
       Parameters:
         VpcModule: !GetAtt 'Vpc.Outputs.StackName'
       TemplateURL: './node_modules/@cfn-modules/client-sg/module.yml'
-  FileSystem:
+  ServerAsg:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       Parameters:
         VpcModule: !GetAtt 'Vpc.Outputs.StackName'
-        ClientSgModule: !GetAtt 'ClientSg.Outputs.StackName'
-        NumberOfAvailabilityZones: !GetAtt 'Vpc.Outputs.NumberOfAvailabilityZones'
-      TemplateURL: './node_modules/@cfn-modules/efs-file-system/module.yml'
-  Asg:
+        UserData: |
+          yum install -y httpd
+          service httpd start
+          echo "cfn-modules" > /var/www/html/index.html
+        IngressTcpPort1: '80'
+        IngressTcpClientSgModule1: !GetAtt 'ClientSg.Outputs.StackName'
+        AmazonLinux2Version: '2.0.20181114'
+        InstanceType: 't3.nano'
+      TemplateURL: './node_modules/@cfn-modules/asg-singleton-amazon-linux2/module.yml'
+  ClientAsg:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       Parameters:
         VpcModule: !GetAtt 'Vpc.Outputs.StackName'
         KeyName: !Ref KeyName
-        ClientSgModule1: !GetAtt 'ClientSg.Outputs.StackName'
-        FileSystemModule1: !GetAtt 'FileSystem.Outputs.StackName'
-        UserData: 'chmod 777 /mnt/efs1'
         AmazonLinux2Version: '2.0.20181114'
         InstanceType: 't3.nano'
+        ClientSgModule1: !GetAtt 'ClientSg.Outputs.StackName'
       TemplateURL: './node_modules/@cfn-modules/asg-singleton-amazon-linux2/module.yml'
 Outputs:
-  PublicIpAddress:
-    Value: !GetAtt 'Asg.Outputs.PublicIpAddress'
+  ServerPublicIpAddress:
+    Value: !GetAtt 'ServerAsg.Outputs.PublicIpAddress'
+  ClientPublicIpAddress:
+    Value: !GetAtt 'ClientAsg.Outputs.PublicIpAddress'
