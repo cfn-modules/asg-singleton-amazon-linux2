@@ -22,6 +22,7 @@ Resources:
           echo "cfn-modules" > /var/www/html/index.html
         IngressTcpPort1: '80'
         AmazonLinux2Version: '2.0.20181114'
+        InstanceType: 't3.nano'
       TemplateURL: './node_modules/@cfn-modules/asg-singleton-amazon-linux2/module.yml'
 Outputs:
   PublicIpAddress:
