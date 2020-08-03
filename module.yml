@@ -265,7 +265,7 @@ Resources:
           'Fn::ImportValue': !Sub '${HostedZoneModule}-Name'
       ResourceRecords:
       - !Ref ElasticIP
-      TTL: '60'
+      TTL: 60
       Type: A
   RecordSetPrivateIpAddress:
     Condition: HasHostedZoneModuleAndSubnetReachPrivate
@@ -280,7 +280,7 @@ Resources:
           'Fn::ImportValue': !Sub '${HostedZoneModule}-Name'
       ResourceRecords:
       - '8.8.8.8' # IP address is updated as soon as EC2 instance is launched by ASG
-      TTL: '60'
+      TTL: 60
       Type: A
   LogGroup:
     Type: 'AWS::Logs::LogGroup'
