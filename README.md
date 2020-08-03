@@ -238,7 +238,7 @@ Resources:
     </tr>
     <tr>
       <td>FileSystemModule1</td>
-      <td>Stack name of <a href="https://www.npmjs.com/package/@cfn-modules/efs-file-system">efs-file-system module</a></td>
+      <td>Stack name of <a href="https://www.npmjs.com/package/@cfn-modules/efs-file-system">efs-file-system module</a> mounted to /mnt/efs1</td>
       <td></td>
       <td>no</td>
       <td></td>
