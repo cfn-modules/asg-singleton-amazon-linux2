@@ -1,6 +1,3 @@
-[![Build Status](https://travis-ci.org/cfn-modules/asg-singleton-amazon-linux2.svg?branch=master)](https://travis-ci.org/cfn-modules/asg-singleton-amazon-linux2)
-[![NPM version](https://img.shields.io/npm/v/@cfn-modules/asg-singleton-amazon-linux2.svg)](https://www.npmjs.com/package/@cfn-modules/asg-singleton-amazon-linux2)
-
 # cfn-modules: AWS Auto Scaling Group singleton (Amazon Linux 2)
 
 AWS Auto Scaling Group running a single EC2 instance based on Amazon Linux 2 with a fixed public IP address (Elastic IP), [alerting](https://www.npmjs.com/package/@cfn-modules/alerting), [IAM user SSH access](https://github.com/widdix/aws-ec2-ssh), following an immutable infrastructure approach (root volume can be replaced at any time).
