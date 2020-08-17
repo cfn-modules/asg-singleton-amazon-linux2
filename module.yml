@@ -41,7 +41,7 @@ Parameters:
     Default: false
     AllowedValues: [true, false]
   SystemsManagerAccess:
-    Description: 'Enable AWS Systems Manager agent and authorization.'
+    Description: 'Enable AWS Systems Manager agent and Session Manager.'
     Type: String
     Default: true
     AllowedValues: [true, false]
@@ -66,7 +66,7 @@ Parameters:
     Default: 14
     AllowedValues: [1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653]
   SubDomainNameWithDot:
-    Description: 'Name that is used to create the DNS entry with trailing dot, e.g. ${SubDomainNameWithDot}${HostedZoneName}. Leave blank for naked (or apex and bare) domain. Requires HostedZoneModule parameter!'
+    Description: 'Name that is used to create the DNS entry with trailing dot, e.g. §{SubDomainNameWithDot}§{HostedZoneName}. Leave blank for naked (or apex and bare) domain. Requires HostedZoneModule parameter!'
     Type: String
     Default: 'test.'
   UserData:
@@ -77,12 +77,24 @@ Parameters:
     Description: 'Optional port allowing ingress TCP traffic.'
     Type: String
     Default: ''
+  IngressTcpClientSgModule1:
+    Description: 'Optional stack name of client-sg module that is required to access IngressTcpPort1 (if you leave this blank, IngressTcpPort1 is open to the world 0.0.0.0/0).'
+    Type: String
+    Default: ''
   IngressTcpPort2:
     Description: 'Optional port allowing ingress TCP traffic.'
     Type: String
     Default: ''
+  IngressTcpClientSgModule2:
+    Description: 'Optional stack name of client-sg module that is required to access IngressTcpPort2 (if you leave this blank, IngressTcpPort2 is open to the world 0.0.0.0/0).'
+    Type: String
+    Default: ''
   IngressTcpPort3:
     Description: 'Optional port allowing ingress TCP traffic.'
+    Type: String
+    Default: ''
+  IngressTcpClientSgModule3:
+    Description: 'Optional stack name of client-sg module that is required to access IngressTcpPort3 (if you leave this blank, IngressTcpPort3 is open to the world 0.0.0.0/0).'
     Type: String
     Default: ''
   ClientSgModule1:
@@ -105,11 +117,19 @@ Parameters:
     Description: 'Optional version of Amazon Linux 2.'
     Type: String
     Default: '2.0.20180622.1'
-    AllowedValues: ['2.0.20180622.1']
+    AllowedValues: ['2.0.20190508', '2.0.20181114', '2.0.20180622.1']
+  ManagedPolicyArns:
+    Description: 'Optional comma-delimited list of IAM managed policy ARNs to attach to the instance''s IAM role'
+    Type: String
+    Default: ''
 Mappings:
   VersionMap:
     '2.0.20180622.1':
       Map: RegionMap20201806221
+    '2.0.20181114':
+      Map: RegionMap2020181114
+    '2.0.20190508':
+      Map: RegionMap2020190508
   RegionMap20201806221:
     'ap-south-1':
       ImageId: 'ami-d783a9b8'
@@ -141,6 +161,72 @@ Mappings:
       ImageId: 'ami-e0ba5c83'
     'us-west-2':
       ImageId: 'ami-a9d09ed1'
+  RegionMap2020181114:
+    'ap-south-1':
+      ImageId: 'ami-06bcd1131b2f55803'
+    'eu-west-3':
+      ImageId: 'ami-051707cdba246187b'
+    'eu-north-1':
+      ImageId: 'ami-07ec6279'
+    'eu-west-2':
+      ImageId: 'ami-0274e11dced17bb5b'
+    'eu-west-1':
+      ImageId: 'ami-09693313102a30b2c'
+    'ap-northeast-2':
+      ImageId: 'ami-0b4fdb56a00adb616'
+    'ap-northeast-1':
+      ImageId: 'ami-0a2de1c3b415889d2'
+    'sa-east-1':
+      ImageId: 'ami-0112d42866980b373'
+    'ca-central-1':
+      ImageId: 'ami-076b4adb3f90cd384'
+    'ap-southeast-1':
+      ImageId: 'ami-0b84d2c53ad5250c2'
+    'ap-southeast-2':
+      ImageId: 'ami-08589eca6dcc9b39c'
+    'eu-central-1':
+      ImageId: 'ami-034fffcc6a0063961'
+    'us-east-1':
+      ImageId: 'ami-009d6802948d06e52'
+    'us-east-2':
+      ImageId: 'ami-02e680c4540db351e'
+    'us-west-1':
+      ImageId: 'ami-011b6930a81cd6aaf'
+    'us-west-2':
+      ImageId: 'ami-01bbe152bf19d0289'
+  RegionMap2020190508:
+    'eu-north-1':
+      ImageId: 'ami-1fb13961'
+    'ap-south-1':
+      ImageId: 'ami-00e782930f1c3dbc7'
+    'eu-west-3':
+      ImageId: 'ami-0ebb3a801d5fb8b9b'
+    'eu-west-2':
+      ImageId: 'ami-0009a33f033d8b7b6'
+    'eu-west-1':
+      ImageId: 'ami-030dbca661d402413'
+    'ap-northeast-2':
+      ImageId: 'ami-08ab3f7e72215fe91'
+    'ap-northeast-1':
+      ImageId: 'ami-00d101850e971728d'
+    'sa-east-1':
+      ImageId: 'ami-058141e091292ecf0'
+    'ca-central-1':
+      ImageId: 'ami-08a9b721ecc5b0a53'
+    'ap-southeast-1':
+      ImageId: 'ami-0b5a47f8865280111'
+    'ap-southeast-2':
+      ImageId: 'ami-0fb7513bcdc525c3b'
+    'eu-central-1':
+      ImageId: 'ami-0ebe657bc328d4e82'
+    'us-east-1':
+      ImageId: 'ami-0c6b1d09930fac512'
+    'us-east-2':
+      ImageId: 'ami-0ebbf2179e615c338'
+    'us-west-1':
+      ImageId: 'ami-015954d5e5548d13b'
+    'us-west-2':
+      ImageId: 'ami-0cb72367e98845d43'
 Conditions:
   HasAlertingModule: !Not [!Equals [!Ref AlertingModule, '']]
   HasBastionModule: !Not [!Equals [!Ref BastionModule, '']]
@@ -154,14 +240,18 @@ Conditions:
   HasSubnetReachPublic: !Equals [!Ref SubnetReach, Public]
   HasSubnetReachPrivate: !Equals [!Ref SubnetReach, Private]
   HasIngressTcpPort1: !Not [!Equals [!Ref IngressTcpPort1, '']]
+  HasIngressTcpClientSgModule1: !Not [!Equals [!Ref IngressTcpClientSgModule1, '']]
   HasIngressTcpPort2: !Not [!Equals [!Ref IngressTcpPort2, '']]
+  HasIngressTcpClientSgModule2: !Not [!Equals [!Ref IngressTcpClientSgModule2, '']]
   HasIngressTcpPort3: !Not [!Equals [!Ref IngressTcpPort3, '']]
+  HasIngressTcpClientSgModule3: !Not [!Equals [!Ref IngressTcpClientSgModule3, '']]
   HasHostedZoneModuleAndSubnetReachPublic: !And [!Condition HasHostedZoneModule, !Condition HasSubnetReachPublic]
   HasHostedZoneModuleAndSubnetReachPrivate: !And [!Condition HasHostedZoneModule, !Condition HasSubnetReachPrivate]
   HasClientSgModule1: !Not [!Equals [!Ref ClientSgModule1, '']]
   HasClientSgModule2: !Not [!Equals [!Ref ClientSgModule2, '']]
   HasClientSgModule3: !Not [!Equals [!Ref ClientSgModule3, '']]
   HasLifecycleHook: !Or [!Condition HasSubnetReachPublic, !Condition HasHostedZoneModuleAndSubnetReachPrivate]
+  HasManagedPolicyArns: !Not [!Equals [!Ref ManagedPolicyArns, '']]
 Resources:
   RecordSetPublicIpAddress:
     Condition: HasHostedZoneModuleAndSubnetReachPublic
@@ -176,7 +266,7 @@ Resources:
           'Fn::ImportValue': !Sub '${HostedZoneModule}-Name'
       ResourceRecords:
       - !Ref ElasticIP
-      TTL: '60'
+      TTL: 60
       Type: A
   RecordSetPrivateIpAddress:
     Condition: HasHostedZoneModuleAndSubnetReachPrivate
@@ -191,7 +281,7 @@ Resources:
           'Fn::ImportValue': !Sub '${HostedZoneModule}-Name'
       ResourceRecords:
       - '8.8.8.8' # IP address is updated as soon as EC2 instance is launched by ASG
-      TTL: '60'
+      TTL: 60
       Type: A
   LogGroup:
     Type: 'AWS::Logs::LogGroup'
@@ -230,7 +320,8 @@ Resources:
       IpProtocol: tcp
       FromPort: !Ref IngressTcpPort1
       ToPort: !Ref IngressTcpPort1
-      CidrIp: '0.0.0.0/0'
+      SourceSecurityGroupId: !If [HasIngressTcpClientSgModule1, {'Fn::ImportValue': !Sub '${IngressTcpClientSgModule1}-SecurityGroupId'}, !Ref 'AWS::NoValue']
+      CidrIp: !If [HasIngressTcpClientSgModule1, !Ref 'AWS::NoValue', '0.0.0.0/0']
   SecurityGroupIngressTcpPort2:
     Type: 'AWS::EC2::SecurityGroupIngress'
     Condition: HasIngressTcpPort2
@@ -239,7 +330,8 @@ Resources:
       IpProtocol: tcp
       FromPort: !Ref IngressTcpPort2
       ToPort: !Ref IngressTcpPort2
-      CidrIp: '0.0.0.0/0'
+      SourceSecurityGroupId: !If [HasIngressTcpClientSgModule2, {'Fn::ImportValue': !Sub '${IngressTcpClientSgModule2}-SecurityGroupId'}, !Ref 'AWS::NoValue']
+      CidrIp: !If [HasIngressTcpClientSgModule2, !Ref 'AWS::NoValue', '0.0.0.0/0']
   SecurityGroupIngressTcpPort3:
     Type: 'AWS::EC2::SecurityGroupIngress'
     Condition: HasIngressTcpPort3
@@ -248,7 +340,8 @@ Resources:
       IpProtocol: tcp
       FromPort: !Ref IngressTcpPort3
       ToPort: !Ref IngressTcpPort3
-      CidrIp: '0.0.0.0/0'
+      SourceSecurityGroupId: !If [HasIngressTcpClientSgModule3, {'Fn::ImportValue': !Sub '${IngressTcpClientSgModule3}-SecurityGroupId'}, !Ref 'AWS::NoValue']
+      CidrIp: !If [HasIngressTcpClientSgModule3, !Ref 'AWS::NoValue', '0.0.0.0/0']
   InstanceProfile:
     Type: 'AWS::IAM::InstanceProfile'
     Properties:
@@ -264,18 +357,32 @@ Resources:
           Principal:
             Service: 'ec2.amazonaws.com'
           Action: 'sts:AssumeRole'
-      ManagedPolicyArns: !If [HasSystemsManagerAccess, ['arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM'], []]
+      ManagedPolicyArns: !If [HasManagedPolicyArns, !Split [',', !Ref ManagedPolicyArns], !Ref 'AWS::NoValue']
       Policies:
+      - !If
+        - HasSystemsManagerAccess
+        - PolicyName: ssm
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Action:
+              - 'ssmmessages:*' # SSM Agent by https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-setting-up-messageAPIs.html
+              - 'ssm:UpdateInstanceInformation' # SSM agent by https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-setting-up-messageAPIs.html
+              - 'ec2messages:*' # SSM Session Manager by https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-setting-up-messageAPIs.html
+              Resource: '*'
+        - !Ref 'AWS::NoValue'
       - PolicyName: logs
         PolicyDocument:
           Version: '2012-10-17'
           Statement:
           - Effect: Allow
             Action:
+            - 'logs:CreateLogGroup'
             - 'logs:CreateLogStream'
             - 'logs:PutLogEvents'
             - 'logs:DescribeLogStreams'
-            Resource: '*'
+            Resource: !GetAtt 'LogGroup.Arn'
   PolicySshAccess:
     Type: 'AWS::IAM::Policy'
     Condition: HasIAMUserSSHAccess
@@ -295,7 +402,7 @@ Resources:
           Action:
           - 'iam:ListSSHPublicKeys'
           - 'iam:GetSSHPublicKey'
-          Resource: !Sub 'arn:aws:iam::${AWS::AccountId}:user/*'
+          Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:user/*'
         - Effect: Allow
           Action: 'ec2:DescribeTags'
           Resource: '*'
@@ -430,7 +537,7 @@ Resources:
         ssh-access:
           packages:
             rpm:
-              aws-ec2-ssh: 'https://s3-eu-west-1.amazonaws.com/widdix-aws-ec2-ssh-releases-eu-west-1/aws-ec2-ssh-1.8.0-1.el7.centos.noarch.rpm'
+              aws-ec2-ssh: 'https://s3-eu-west-1.amazonaws.com/widdix-aws-ec2-ssh-releases-eu-west-1/aws-ec2-ssh-1.9.2-1.el7.centos.noarch.rpm'
           commands:
             a_configure_sudo:
               command: 'sed -i ''s/SUDOERS_GROUPS=""/SUDOERS_GROUPS="##ALL##"/g'' /etc/aws-ec2-ssh.conf'
@@ -493,7 +600,7 @@ Resources:
         - Region: !Ref 'AWS::Region'
           StackName: !Ref 'AWS::StackName'
           UserDataAwaitElasticIP: !If [HasSubnetReachPublic, !Sub 'while [ "$(curl -s -m 6 --retry 3 --retry-delay 1 "http://169.254.169.254/latest/meta-data/public-ipv4")" != "${ElasticIP.AllocationId}" ]; do sleep 1; done && curl -s -m 6 --retry 30 --retry-delay 1 -I "https://aws.amazon.com/"', ''] # wait for ElasticIP association and test Internet connectivity to make sure the EIP was assigned (still race condition possible, but AWS does not provide us any status information about ElasticIP associations)
-          UserDataMountFileSystem1: !If [HasFileSystemModule1, !Join ['', ['yum install -y amazon-efs-utils && mkdir -p /mnt/efs1 && echo "', {'Fn::ImportValue': !Sub '${FileSystemModule1}-Id'}, ':/ /mnt/efs1 efs defaults,_netdev 0 0" >> /etc/fstab']], '']
+          UserDataMountFileSystem1: !If [HasFileSystemModule1, !Join ['', ['yum install -y amazon-efs-utils && mkdir -p /mnt/efs1 && echo "', {'Fn::ImportValue': !Sub '${FileSystemModule1}-Id'}, ':/ /mnt/efs1 efs tls,_netdev 0 0" >> /etc/fstab']], '']
           UserData: !Ref UserData
   QueueLifecycleHook:
     Condition: HasLifecycleHook
@@ -584,7 +691,6 @@ Resources:
   AutoScalingGroup:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
     Properties:
-      DesiredCapacity: '1'
       LaunchConfigurationName: !Ref LaunchConfiguration
       LifecycleHookSpecificationList: !If
       - HasLifecycleHook
@@ -655,7 +761,7 @@ Outputs:
   ModuleId:
     Value: 'asg-singleton-amazon-linux2'
   ModuleVersion:
-    Value: '0.0.2'
+    Value: '2.3.0'
   StackName:
     Value: !Ref 'AWS::StackName'
   Name:

@@ -1,10 +1,6 @@
 ---
 AWSTemplateFormatVersion: '2010-09-09'
 Description: 'cfn-modules test'
-Parameters:
-  KeyName:
-    Description: 'Key name of the Linux user ec2-user to establish a SSH connection to the EC2 instance'
-    Type: String
 Resources:
   Vpc:
     Type: 'AWS::CloudFormation::Stack'
@@ -20,8 +16,7 @@ Resources:
     Properties:
       Parameters:
         VpcModule: !GetAtt 'Vpc.Outputs.StackName'
-        KeyName: !Ref KeyName
-        AmazonLinux2Version: '2.0.20181114'
+        AmazonLinux2Version: '2.0.20190508'
         InstanceType: 't3.nano'
       TemplateURL: './node_modules/@cfn-modules/asg-singleton-amazon-linux2/module.yml'
 Outputs:

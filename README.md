@@ -1,6 +1,3 @@
-[![Build Status](https://travis-ci.org/cfn-modules/asg-singleton-amazon-linux2.svg?branch=master)](https://travis-ci.org/cfn-modules/asg-singleton-amazon-linux2)
-[![NPM version](https://img.shields.io/npm/v/@cfn-modules/asg-singleton-amazon-linux2.svg)](https://www.npmjs.com/package/@cfn-modules/asg-singleton-amazon-linux2)
-
 # cfn-modules: AWS Auto Scaling Group singleton (Amazon Linux 2)
 
 AWS Auto Scaling Group running a single EC2 instance based on Amazon Linux 2 with a fixed public IP address (Elastic IP), [alerting](https://www.npmjs.com/package/@cfn-modules/alerting), [IAM user SSH access](https://github.com/widdix/aws-ec2-ssh), following an immutable infrastructure approach (root volume can be replaced at any time).
@@ -39,15 +36,28 @@ Resources:
         SubDomainNameWithDot: 'test.' # optional
         UserData: '' # optional
         IngressTcpPort1: '' # optional
+        IngressTcpClientSgModule1: '' # optional
         IngressTcpPort2: '' # optional
+        IngressTcpClientSgModule2: '' # optional
         IngressTcpPort3: '' # optional
+        IngressTcpClientSgModule3: '' # optional
         ClientSgModule1: '' # optional
         ClientSgModule2: '' # optional
         ClientSgModule3: '' # optional
         FileSystemModule1: '' # optional
-        AmazonLinux2Version: '2.0.20180622.1' # optional
+        AmazonLinux2Version: '2.0.20180622.1' # set this to the latest available version!
+        ManagedPolicyArns: '' # optional
       TemplateURL: './node_modules/@cfn-modules/asg-singleton-amazon-linux2/module.yml'
 ```
+
+## Examples
+
+* [asg-singleton-ssm](https://github.com/cfn-modules/docs/tree/master/examples/asg-singleton-ssm)
+
+## Related modules
+
+* [ec2-instance-amazon-linux](https://github.com/cfn-modules/ec2-instance-amazon-linux)
+* [ec2-instance-amazon-linux2](https://github.com/cfn-modules/ec2-instance-amazon-linux2)
 
 ## Parameters
 
@@ -148,7 +158,7 @@ Resources:
     </tr>
     <tr>
       <td>SubDomainNameWithDot</td>
-      <td>Name that is used to create the DNS entry with trailing dot, e.g. ${SubDomainNameWithDot}${HostedZoneName}. Leave blank for naked (or apex and bare) domain. Requires HostedZoneModule parameter!</td>
+      <td>Name that is used to create the DNS entry with trailing dot, e.g. §{SubDomainNameWithDot}§{HostedZoneName}. Leave blank for naked (or apex and bare) domain. Requires HostedZoneModule parameter!</td>
       <td>test.</td>
       <td>no</td>
       <td></td>
@@ -168,8 +178,22 @@ Resources:
       <td></td>
     </tr>
     <tr>
+      <td>IngressTcpClientSgModule1</td>
+      <td>Stack name of <a href="https://www.npmjs.com/package/@cfn-modules/client-sg">client-sg module</a> that is required to access IngressTcpPort1 (if you leave this blank, IngressTcpPort1 is open to the world 0.0.0.0/0)</td>
+      <td></td>
+      <td>no</td>
+      <td></td>
+    </tr>
+    <tr>
       <td>IngressTcpPort2</td>
       <td>Port allowing ingress TCP traffic</td>
+      <td></td>
+      <td>no</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>IngressTcpClientSgModule2</td>
+      <td>Stack name of <a href="https://www.npmjs.com/package/@cfn-modules/client-sg">client-sg module</a> that is required to access IngressTcpPort2 (if you leave this blank, IngressTcpPort2 is open to the world 0.0.0.0/0)</td>
       <td></td>
       <td>no</td>
       <td></td>
@@ -182,29 +206,36 @@ Resources:
       <td></td>
     </tr>
     <tr>
+      <td>IngressTcpClientSgModule3</td>
+      <td>Stack name of <a href="https://www.npmjs.com/package/@cfn-modules/client-sg">client-sg module</a> that is required to access IngressTcpPort3 (if you leave this blank, IngressTcpPort3 is open to the world 0.0.0.0/0)</td>
+      <td></td>
+      <td>no</td>
+      <td></td>
+    </tr>
+    <tr>
       <td>ClientSgModule1</td>
-      <td>Stack name of <a href="https://www.npmjs.com/package/@cfn-modules/client-sg">client-sg module</a> module to mark traffic from EC2 instance</td>
+      <td>Stack name of <a href="https://www.npmjs.com/package/@cfn-modules/client-sg">client-sg module</a> to mark traffic from EC2 instance</td>
       <td></td>
       <td>no</td>
       <td></td>
     </tr>
     <tr>
       <td>ClientSgModule2</td>
-      <td>Stack name of <a href="https://www.npmjs.com/package/@cfn-modules/client-sg">client-sg module</a> module to mark traffic from EC2 instance</td>
+      <td>Stack name of <a href="https://www.npmjs.com/package/@cfn-modules/client-sg">client-sg module</a> to mark traffic from EC2 instance</td>
       <td></td>
       <td>no</td>
       <td></td>
     </tr>
     <tr>
       <td>ClientSgModule3</td>
-      <td>Stack name of <a href="https://www.npmjs.com/package/@cfn-modules/client-sg">client-sg module</a> module to mark traffic from EC2 instance</td>
+      <td>Stack name of <a href="https://www.npmjs.com/package/@cfn-modules/client-sg">client-sg module</a> to mark traffic from EC2 instance</td>
       <td></td>
       <td>no</td>
       <td></td>
     </tr>
     <tr>
       <td>FileSystemModule1</td>
-      <td>Stack name of <a href="https://www.npmjs.com/package/@cfn-modules/efs-file-system">efs-file-system module</a></td>
+      <td>Stack name of <a href="https://www.npmjs.com/package/@cfn-modules/efs-file-system">efs-file-system module</a> mounted to /mnt/efs1</td>
       <td></td>
       <td>no</td>
       <td></td>
@@ -214,7 +245,14 @@ Resources:
       <td>Version of Amazon Linux 2</td>
       <td>2.0.20180622.1</td>
       <td>no</td>
-      <td>['2.0.20180622.1']</td>
+      <td>['2.0.20190508', '2.0.20181114', '2.0.20180622.1']</td>
+    </tr>
+    <tr>
+      <td>ManagedPolicyArns</td>
+      <td>Comma-delimited list of IAM managed policy ARNs to attach to the instance's IAM role</td>
+      <td></td>
+      <td>no</td>
+      <td></td>
     </tr>
   </tbody>
 </table>
@@ -225,3 +263,10 @@ Resources:
 * Scalable: EC2 instances capacity (CPU, RAM, network, ...) is limited by design
 * Secure: Root volume is not encrypted at-rest (not possible unless the AMI is encrypted)
 * Secure: Root volume it not backed up
+* Monitoring: Network In+Out is not monitored according to capacity of instance type
+
+## Migration Guides
+
+### Migrate to v2
+
+* If `SystemsManagerAccess` is set to `true`, we no longer attach the AWS managed policy `AmazonEC2RoleforSSM` for security reasons. Instead we only allow the SSM agent to communicate with the backend and we enable Session Manager. If you need more permissions, checkout our [SSM example](https://github.com/cfn-modules/docs/tree/master/examples/asg-singleton-ssm).
