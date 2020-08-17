@@ -624,7 +624,7 @@ Resources:
     Properties:
       Parameters:
         Handler: 'ec2-associate-address.handler'
-        Runtime: 'nodejs8.10'
+        Runtime: 'nodejs12.x'
         ReservedConcurrentExecutions: '1'
       TemplateURL: './node_modules/@cfn-modules/lambda-function/module.yml'
   PolicyFunctionLifecycleHook:
