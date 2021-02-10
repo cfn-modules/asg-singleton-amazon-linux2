@@ -5,6 +5,7 @@
   "author": "Michael Wittig <michael@widdix.de>",
   "license": "Apache-2.0",
   "keywords": ["cfn-modules", "cfn-modules:ExposeName", "cfn-modules:ExposeSecurityGroupId"],
+  "bundledDependencies": ["@cfn-modules/sqs-queue", "@cfn-modules/lambda-event-source-sqs-queue", "@cfn-modules/lambda-function"],
   "homepage": "https://github.com/cfn-modules",
   "bugs": {
     "url": "https://github.com/cfn-modules/asg-singleton-amazon-linux2/issues"
