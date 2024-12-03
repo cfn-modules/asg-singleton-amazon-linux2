@@ -436,8 +436,8 @@ Resources:
     Type: 'AWS::EC2::EIP'
     Properties:
       Domain: vpc
-  LaunchConfiguration:
-    Type: 'AWS::AutoScaling::LaunchConfiguration'
+  LaunchTemplate:
+    Type: 'AWS::EC2::LaunchTemplate'
     Metadata:
       'AWS::CloudFormation::Init':
         configSets:
@@ -600,39 +600,45 @@ Resources:
                 enabled: !If [HasSystemsManagerAccess, true, false]
                 ensureRunning: !If [HasSystemsManagerAccess, true, false]
     Properties:
-      AssociatePublicIpAddress: !If [HasSubnetReachPublic, true, false]
-      IamInstanceProfile: !Ref InstanceProfile
-      ImageId: !FindInMap [!FindInMap [VersionMap, !Ref AmazonLinux2Version, Map], !Ref 'AWS::Region', ImageId]
-      InstanceMonitoring: false
-      InstanceType: !Ref InstanceType
-      KeyName: !If [HasKeyName, !Ref KeyName, !Ref 'AWS::NoValue']
-      SecurityGroups:
-      - !Ref SecurityGroup
-      - !If [HasClientSgModule1, {'Fn::ImportValue': !Sub '${ClientSgModule1}-SecurityGroupId'}, !Ref 'AWS::NoValue']
-      - !If [HasClientSgModule2, {'Fn::ImportValue': !Sub '${ClientSgModule2}-SecurityGroupId'}, !Ref 'AWS::NoValue']
-      - !If [HasClientSgModule3, {'Fn::ImportValue': !Sub '${ClientSgModule3}-SecurityGroupId'}, !Ref 'AWS::NoValue']
-      UserData:
-        'Fn::Base64': !Sub
-        - |
-            #!/bin/bash -ex
-            trap '/opt/aws/bin/cfn-signal -e 1 --region ${Region} --stack ${StackName} --resource AutoScalingGroup' ERR
-            ${UserDataAttachElasticIP}
-            ${UserDataUpdateRecordSet}
-            ${UserDataMountFileSystem1}
-            mount -a
-            /opt/aws/bin/cfn-init -v --region ${Region} --stack ${StackName} --resource LaunchConfiguration
-            ${UserData}
-            /opt/aws/bin/cfn-signal -e 0 --region ${Region} --stack ${StackName} --resource AutoScalingGroup
-        - Region: !Ref 'AWS::Region'
-          StackName: !Ref 'AWS::StackName'
-          UserDataAttachElasticIP: !If [HasSubnetReachPublic, !Sub 'aws --region ${AWS::Region} ec2 associate-address --instance-id $(curl -s -m 60 http://169.254.169.254/latest/meta-data/instance-id) --allocation-id ${ElasticIP.AllocationId} && sleep 5', ''] # TODO get rid of sleep 5 to fix the problem that the ElasticIP association interrupts Internet access for an unknown amount of time
-          UserDataUpdateRecordSet: !If [HasHostedZoneModuleAndSubnetReachPrivate, !Join ['', ['aws route53 change-resource-record-sets --hosted-zone-id ', {'Fn::ImportValue': !Sub '${HostedZoneModule}-Id'}, ' --change-batch "{\"Changes\": [{\"Action\": \"UPSERT\", \"ResourceRecordSet\": {\"Name\": \"', !Ref SubDomainNameWithDot, {'Fn::ImportValue': !Sub '${HostedZoneModule}-Name'}, '\", \"Type\": \"A\", \"TTL\": 60, \"ResourceRecords\": [{\"Value\": \"$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)\"}]}}]}"']], '']
-          UserDataMountFileSystem1: !If [HasFileSystemModule1, !Join ['', ['yum install -y amazon-efs-utils && mkdir -p /mnt/efs1 && echo "', {'Fn::ImportValue': !Sub '${FileSystemModule1}-Id'}, ':/ /mnt/efs1 efs tls,_netdev 0 0" >> /etc/fstab']], '']
-          UserData: !Ref UserData
+      LaunchTemplateData:
+        NetworkInterfaces:
+        - DeviceIndex: '0'
+          AssociatePublicIpAddress: !If [HasSubnetReachPublic, true, false]
+        IamInstanceProfile: !Ref InstanceProfile
+        ImageId: !FindInMap [!FindInMap [VersionMap, !Ref AmazonLinux2Version, Map], !Ref 'AWS::Region', ImageId]
+        Monitoring:
+          Enabled: false
+        InstanceType: !Ref InstanceType
+        KeyName: !If [HasKeyName, !Ref KeyName, !Ref 'AWS::NoValue']
+        SecurityGroups:
+        - !Ref SecurityGroup
+        - !If [HasClientSgModule1, {'Fn::ImportValue': !Sub '${ClientSgModule1}-SecurityGroupId'}, !Ref 'AWS::NoValue']
+        - !If [HasClientSgModule2, {'Fn::ImportValue': !Sub '${ClientSgModule2}-SecurityGroupId'}, !Ref 'AWS::NoValue']
+        - !If [HasClientSgModule3, {'Fn::ImportValue': !Sub '${ClientSgModule3}-SecurityGroupId'}, !Ref 'AWS::NoValue']
+        UserData:
+          'Fn::Base64': !Sub
+          - |
+              #!/bin/bash -ex
+              trap '/opt/aws/bin/cfn-signal -e 1 --region ${Region} --stack ${StackName} --resource AutoScalingGroup' ERR
+              ${UserDataAttachElasticIP}
+              ${UserDataUpdateRecordSet}
+              ${UserDataMountFileSystem1}
+              mount -a
+              /opt/aws/bin/cfn-init -v --region ${Region} --stack ${StackName} --resource LaunchConfiguration
+              ${UserData}
+              /opt/aws/bin/cfn-signal -e 0 --region ${Region} --stack ${StackName} --resource AutoScalingGroup
+          - Region: !Ref 'AWS::Region'
+            StackName: !Ref 'AWS::StackName'
+            UserDataAttachElasticIP: !If [HasSubnetReachPublic, !Sub 'aws --region ${AWS::Region} ec2 associate-address --instance-id $(curl -s -m 60 http://169.254.169.254/latest/meta-data/instance-id) --allocation-id ${ElasticIP.AllocationId} && sleep 5', ''] # TODO get rid of sleep 5 to fix the problem that the ElasticIP association interrupts Internet access for an unknown amount of time
+            UserDataUpdateRecordSet: !If [HasHostedZoneModuleAndSubnetReachPrivate, !Join ['', ['aws route53 change-resource-record-sets --hosted-zone-id ', {'Fn::ImportValue': !Sub '${HostedZoneModule}-Id'}, ' --change-batch "{\"Changes\": [{\"Action\": \"UPSERT\", \"ResourceRecordSet\": {\"Name\": \"', !Ref SubDomainNameWithDot, {'Fn::ImportValue': !Sub '${HostedZoneModule}-Name'}, '\", \"Type\": \"A\", \"TTL\": 60, \"ResourceRecords\": [{\"Value\": \"$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)\"}]}}]}"']], '']
+            UserDataMountFileSystem1: !If [HasFileSystemModule1, !Join ['', ['yum install -y amazon-efs-utils && mkdir -p /mnt/efs1 && echo "', {'Fn::ImportValue': !Sub '${FileSystemModule1}-Id'}, ':/ /mnt/efs1 efs tls,_netdev 0 0" >> /etc/fstab']], '']
+            UserData: !Ref UserData
   AutoScalingGroup:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
     Properties:
-      LaunchConfigurationName: !Ref LaunchConfiguration
+      LaunchTemplate:
+        LaunchTemplateId: !Ref LaunchTemplate
+        Version: !GetAtt LaunchTemplate.LatestVersionNumber
       MaxSize: '1'
       MinSize: '1'
       NotificationConfigurations: !If
