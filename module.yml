@@ -585,8 +585,8 @@ Resources:
               content: !Sub |
                 [cfn-auto-reloader-hook]
                 triggers=post.update
-                path=Resources.LaunchConfiguration.Metadata.AWS::CloudFormation::Init
-                action=/opt/aws/bin/cfn-init --verbose --stack=${AWS::StackName} --region=${AWS::Region} --resource=LaunchConfiguration
+                path=Resources.LaunchTemplate.Metadata.AWS::CloudFormation::Init
+                action=/opt/aws/bin/cfn-init --verbose --stack=${AWS::StackName} --region=${AWS::Region} --resource=LaunchTemplate
                 runas=root
           services:
             sysvinit:
@@ -625,7 +625,7 @@ Resources:
               ${UserDataUpdateRecordSet}
               ${UserDataMountFileSystem1}
               mount -a
-              /opt/aws/bin/cfn-init -v --region ${Region} --stack ${StackName} --resource LaunchConfiguration
+              /opt/aws/bin/cfn-init -v --region ${Region} --stack ${StackName} --resource LaunchTemplate
               ${UserData}
               /opt/aws/bin/cfn-signal -e 0 --region ${Region} --stack ${StackName} --resource AutoScalingGroup
           - Region: !Ref 'AWS::Region'
