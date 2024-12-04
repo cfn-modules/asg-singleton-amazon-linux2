@@ -605,7 +605,7 @@ Resources:
         - DeviceIndex: '0'
           AssociatePublicIpAddress: !If [HasSubnetReachPublic, true, false]
         IamInstanceProfile:
-          Arn: !Ref InstanceProfile
+          Arn: !GetAtt InstanceProfile.Arn
         ImageId: !FindInMap [!FindInMap [VersionMap, !Ref AmazonLinux2Version, Map], !Ref 'AWS::Region', ImageId]
         Monitoring:
           Enabled: false
