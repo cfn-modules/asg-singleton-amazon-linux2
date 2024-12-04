@@ -604,6 +604,11 @@ Resources:
         NetworkInterfaces:
         - DeviceIndex: '0'
           AssociatePublicIpAddress: !If [HasSubnetReachPublic, true, false]
+          Groups:
+          - !Ref SecurityGroup
+          - !If [HasClientSgModule1, {'Fn::ImportValue': !Sub '${ClientSgModule1}-SecurityGroupId'}, !Ref 'AWS::NoValue']
+          - !If [HasClientSgModule2, {'Fn::ImportValue': !Sub '${ClientSgModule2}-SecurityGroupId'}, !Ref 'AWS::NoValue']
+          - !If [HasClientSgModule3, {'Fn::ImportValue': !Sub '${ClientSgModule3}-SecurityGroupId'}, !Ref 'AWS::NoValue']
         IamInstanceProfile:
           Arn: !GetAtt InstanceProfile.Arn
         ImageId: !FindInMap [!FindInMap [VersionMap, !Ref AmazonLinux2Version, Map], !Ref 'AWS::Region', ImageId]
@@ -611,11 +616,6 @@ Resources:
           Enabled: false
         InstanceType: !Ref InstanceType
         KeyName: !If [HasKeyName, !Ref KeyName, !Ref 'AWS::NoValue']
-        SecurityGroups:
-        - !Ref SecurityGroup
-        - !If [HasClientSgModule1, {'Fn::ImportValue': !Sub '${ClientSgModule1}-SecurityGroupId'}, !Ref 'AWS::NoValue']
-        - !If [HasClientSgModule2, {'Fn::ImportValue': !Sub '${ClientSgModule2}-SecurityGroupId'}, !Ref 'AWS::NoValue']
-        - !If [HasClientSgModule3, {'Fn::ImportValue': !Sub '${ClientSgModule3}-SecurityGroupId'}, !Ref 'AWS::NoValue']
         UserData:
           'Fn::Base64': !Sub
           - |
