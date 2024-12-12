@@ -116,8 +116,8 @@ Parameters:
   AmazonLinux2Version:
     Description: 'Optional version of Amazon Linux 2.'
     Type: String
-    Default: '2.0.20180622.1'
-    AllowedValues: ['2.0.20190508', '2.0.20181114', '2.0.20180622.1']
+    Default: '2.0.20241113.1'
+    AllowedValues: ['2.0.20241113.1', '2.0.20190508', '2.0.20181114', '2.0.20180622.1']
   ManagedPolicyArns:
     Description: 'Optional comma-delimited list of IAM managed policy ARNs to attach to the instance''s IAM role'
     Type: String
@@ -130,6 +130,8 @@ Mappings:
       Map: RegionMap2020181114
     '2.0.20190508':
       Map: RegionMap2020190508
+    '2.0.20241113.1':
+      Map: RegionMap20202411131
   RegionMap20201806221:
     'ap-south-1':
       ImageId: 'ami-d783a9b8'
@@ -227,6 +229,67 @@ Mappings:
       ImageId: 'ami-015954d5e5548d13b'
     'us-west-2':
       ImageId: 'ami-0cb72367e98845d43'
+  RegionMap20202411131:
+    'ap-south-2':
+      ImageId: 'ami-02df2ab6652b1d48c'
+    'ap-south-1':
+      ImageId: 'ami-0a2d6587128040372'
+    'eu-south-1':
+      ImageId: 'ami-0c9d2d6f0e9eb35ba'
+    'eu-south-2':
+      ImageId: 'ami-09f6eeda628ab3c3b'
+    'me-central-1':
+      ImageId: 'ami-07c50fc5137a50591'
+    'il-central-1':
+      ImageId: 'ami-0dad212801be59965'
+    'ca-central-1':
+      ImageId: 'ami-0893038a49d81a664'
+    'eu-central-1':
+      ImageId: 'ami-0d52a4bd932508da0'
+    'eu-central-2':
+      ImageId: 'ami-04b3bafd71f616a85'
+    'us-west-1':
+      ImageId: 'ami-00114ce822919b9d0'
+    'us-west-2':
+      ImageId: 'ami-0caf77f9b87412c51'
+    'af-south-1':
+      ImageId: 'ami-04cebf330302d6dbd'
+    'eu-north-1':
+      ImageId: 'ami-062ec725a121a65a3'
+    'eu-west-3':
+      ImageId: 'ami-00706d218fa27caea'
+    'eu-west-2':
+      ImageId: 'ami-0fe3baafbb3841a8b'
+    'eu-west-1':
+      ImageId: 'ami-0a09a25a3d0574b76'
+    'ap-northeast-3':
+      ImageId: 'ami-06f41e74d78cf0e25'
+    'ap-northeast-2':
+      ImageId: 'ami-0557d60e6a01a934f'
+    'me-south-1':
+      ImageId: 'ami-0aed90ff09a0fcdd3'
+    'ap-northeast-1':
+      ImageId: 'ami-09260a0ff6a218e6e'
+    'sa-east-1':
+      ImageId: 'ami-0bcd1863fab2956e6'
+    'ap-east-1':
+      ImageId: 'ami-0b443fc33d00d05e1'
+    'ca-west-1':
+      ImageId: 'ami-08040621020ed939d'
+    'ap-southeast-1':
+      ImageId: 'ami-035bdfdb33c502d91'
+    'ap-southeast-2':
+      ImageId: 'ami-00c74e512b7a1c9e2'
+    'ap-southeast-3':
+      ImageId: 'ami-06df0dbd0fa6388ac'
+    'ap-southeast-4':
+      ImageId: 'ami-01565953681c68b93'
+    'us-east-1':
+      ImageId: 'ami-09e4ba81d75ebeb6a'
+    'ap-southeast-5':
+      ImageId: 'ami-099d2d7ca626867f3'
+    'us-east-2':
+      ImageId: 'ami-0c1d914711f05b265'
 Conditions:
   HasAlertingModule: !Not [!Equals [!Ref AlertingModule, '']]
   HasBastionModule: !Not [!Equals [!Ref BastionModule, '']]
@@ -436,8 +499,8 @@ Resources:
     Type: 'AWS::EC2::EIP'
     Properties:
       Domain: vpc
-  LaunchConfiguration:
-    Type: 'AWS::AutoScaling::LaunchConfiguration'
+  LaunchTemplate:
+    Type: 'AWS::EC2::LaunchTemplate'
     Metadata:
       'AWS::CloudFormation::Init':
         configSets:
@@ -585,8 +648,8 @@ Resources:
               content: !Sub |
                 [cfn-auto-reloader-hook]
                 triggers=post.update
-                path=Resources.LaunchConfiguration.Metadata.AWS::CloudFormation::Init
-                action=/opt/aws/bin/cfn-init --verbose --stack=${AWS::StackName} --region=${AWS::Region} --resource=LaunchConfiguration
+                path=Resources.LaunchTemplate.Metadata.AWS::CloudFormation::Init
+                action=/opt/aws/bin/cfn-init --verbose --stack=${AWS::StackName} --region=${AWS::Region} --resource=LaunchTemplate
                 runas=root
           services:
             sysvinit:
@@ -600,39 +663,46 @@ Resources:
                 enabled: !If [HasSystemsManagerAccess, true, false]
                 ensureRunning: !If [HasSystemsManagerAccess, true, false]
     Properties:
-      AssociatePublicIpAddress: !If [HasSubnetReachPublic, true, false]
-      IamInstanceProfile: !Ref InstanceProfile
-      ImageId: !FindInMap [!FindInMap [VersionMap, !Ref AmazonLinux2Version, Map], !Ref 'AWS::Region', ImageId]
-      InstanceMonitoring: false
-      InstanceType: !Ref InstanceType
-      KeyName: !If [HasKeyName, !Ref KeyName, !Ref 'AWS::NoValue']
-      SecurityGroups:
-      - !Ref SecurityGroup
-      - !If [HasClientSgModule1, {'Fn::ImportValue': !Sub '${ClientSgModule1}-SecurityGroupId'}, !Ref 'AWS::NoValue']
-      - !If [HasClientSgModule2, {'Fn::ImportValue': !Sub '${ClientSgModule2}-SecurityGroupId'}, !Ref 'AWS::NoValue']
-      - !If [HasClientSgModule3, {'Fn::ImportValue': !Sub '${ClientSgModule3}-SecurityGroupId'}, !Ref 'AWS::NoValue']
-      UserData:
-        'Fn::Base64': !Sub
-        - |
-            #!/bin/bash -ex
-            trap '/opt/aws/bin/cfn-signal -e 1 --region ${Region} --stack ${StackName} --resource AutoScalingGroup' ERR
-            ${UserDataAttachElasticIP}
-            ${UserDataUpdateRecordSet}
-            ${UserDataMountFileSystem1}
-            mount -a
-            /opt/aws/bin/cfn-init -v --region ${Region} --stack ${StackName} --resource LaunchConfiguration
-            ${UserData}
-            /opt/aws/bin/cfn-signal -e 0 --region ${Region} --stack ${StackName} --resource AutoScalingGroup
-        - Region: !Ref 'AWS::Region'
-          StackName: !Ref 'AWS::StackName'
-          UserDataAttachElasticIP: !If [HasSubnetReachPublic, !Sub 'aws --region ${AWS::Region} ec2 associate-address --instance-id $(curl -s -m 60 http://169.254.169.254/latest/meta-data/instance-id) --allocation-id ${ElasticIP.AllocationId} && sleep 5', ''] # TODO get rid of sleep 5 to fix the problem that the ElasticIP association interrupts Internet access for an unknown amount of time
-          UserDataUpdateRecordSet: !If [HasHostedZoneModuleAndSubnetReachPrivate, !Join ['', ['aws route53 change-resource-record-sets --hosted-zone-id ', {'Fn::ImportValue': !Sub '${HostedZoneModule}-Id'}, ' --change-batch "{\"Changes\": [{\"Action\": \"UPSERT\", \"ResourceRecordSet\": {\"Name\": \"', !Ref SubDomainNameWithDot, {'Fn::ImportValue': !Sub '${HostedZoneModule}-Name'}, '\", \"Type\": \"A\", \"TTL\": 60, \"ResourceRecords\": [{\"Value\": \"$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)\"}]}}]}"']], '']
-          UserDataMountFileSystem1: !If [HasFileSystemModule1, !Join ['', ['yum install -y amazon-efs-utils && mkdir -p /mnt/efs1 && echo "', {'Fn::ImportValue': !Sub '${FileSystemModule1}-Id'}, ':/ /mnt/efs1 efs tls,_netdev 0 0" >> /etc/fstab']], '']
-          UserData: !Ref UserData
+      LaunchTemplateData:
+        NetworkInterfaces:
+        - DeviceIndex: '0'
+          AssociatePublicIpAddress: !If [HasSubnetReachPublic, true, false]
+          Groups:
+          - !Ref SecurityGroup
+          - !If [HasClientSgModule1, {'Fn::ImportValue': !Sub '${ClientSgModule1}-SecurityGroupId'}, !Ref 'AWS::NoValue']
+          - !If [HasClientSgModule2, {'Fn::ImportValue': !Sub '${ClientSgModule2}-SecurityGroupId'}, !Ref 'AWS::NoValue']
+          - !If [HasClientSgModule3, {'Fn::ImportValue': !Sub '${ClientSgModule3}-SecurityGroupId'}, !Ref 'AWS::NoValue']
+        IamInstanceProfile:
+          Arn: !GetAtt InstanceProfile.Arn
+        ImageId: !FindInMap [!FindInMap [VersionMap, !Ref AmazonLinux2Version, Map], !Ref 'AWS::Region', ImageId]
+        Monitoring:
+          Enabled: false
+        InstanceType: !Ref InstanceType
+        KeyName: !If [HasKeyName, !Ref KeyName, !Ref 'AWS::NoValue']
+        UserData:
+          'Fn::Base64': !Sub
+          - |
+              #!/bin/bash -ex
+              trap '/opt/aws/bin/cfn-signal -e 1 --region ${Region} --stack ${StackName} --resource AutoScalingGroup' ERR
+              ${UserDataAttachElasticIP}
+              ${UserDataUpdateRecordSet}
+              ${UserDataMountFileSystem1}
+              mount -a
+              /opt/aws/bin/cfn-init -v --region ${Region} --stack ${StackName} --resource LaunchTemplate
+              ${UserData}
+              /opt/aws/bin/cfn-signal -e 0 --region ${Region} --stack ${StackName} --resource AutoScalingGroup
+          - Region: !Ref 'AWS::Region'
+            StackName: !Ref 'AWS::StackName'
+            UserDataAttachElasticIP: !If [HasSubnetReachPublic, !Sub 'aws --region ${AWS::Region} ec2 associate-address --instance-id $(curl -s -m 60 http://169.254.169.254/latest/meta-data/instance-id) --allocation-id ${ElasticIP.AllocationId} && sleep 5', ''] # TODO get rid of sleep 5 to fix the problem that the ElasticIP association interrupts Internet access for an unknown amount of time
+            UserDataUpdateRecordSet: !If [HasHostedZoneModuleAndSubnetReachPrivate, !Join ['', ['aws route53 change-resource-record-sets --hosted-zone-id ', {'Fn::ImportValue': !Sub '${HostedZoneModule}-Id'}, ' --change-batch "{\"Changes\": [{\"Action\": \"UPSERT\", \"ResourceRecordSet\": {\"Name\": \"', !Ref SubDomainNameWithDot, {'Fn::ImportValue': !Sub '${HostedZoneModule}-Name'}, '\", \"Type\": \"A\", \"TTL\": 60, \"ResourceRecords\": [{\"Value\": \"$(curl -s -m 60 http://169.254.169.254/latest/meta-data/local-ipv4)\"}]}}]}"']], '']
+            UserDataMountFileSystem1: !If [HasFileSystemModule1, !Join ['', ['yum install -y amazon-efs-utils && mkdir -p /mnt/efs1 && echo "', {'Fn::ImportValue': !Sub '${FileSystemModule1}-Id'}, ':/ /mnt/efs1 efs tls,_netdev 0 0" >> /etc/fstab']], '']
+            UserData: !Ref UserData
   AutoScalingGroup:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
     Properties:
-      LaunchConfigurationName: !Ref LaunchConfiguration
+      LaunchTemplate:
+        LaunchTemplateId: !Ref LaunchTemplate
+        Version: !GetAtt LaunchTemplate.LatestVersionNumber
       MaxSize: '1'
       MinSize: '1'
       NotificationConfigurations: !If
